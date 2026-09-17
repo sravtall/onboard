@@ -12,12 +12,12 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Commit + push: `chore: scaffold Claude Code project`
 
 ## Phase 1 — Ingestion & chunking
-- [ ] ingestion/clone.py (sandboxed temp-dir clone, no code execution)
-- [ ] ingestion/repo_map.py (README/deps/dir-tree/entry-points)
-- [ ] chunking/models.py, treesitter_parser.py, chunker.py
-- [ ] tests/fixtures/tiny_repo/ (+ canary file)
-- [ ] Verify: chunk boundaries align to def/class; canary never executes
-- [ ] Commit + push
+- [x] ingestion/clone.py (sandboxed temp-dir clone, no code execution)
+- [x] ingestion/repo_map.py (README/deps/dir-tree/entry-points)
+- [x] chunking/models.py, treesitter_parser.py, chunker.py
+- [x] tests/fixtures/tiny_repo/ (+ canary file)
+- [x] Verify: chunk boundaries align to def/class; canary never executes
+- [x] Commit + push
 
 ## Phase 2 — Hybrid indexing & retrieval
 - [ ] indexing/embeddings.py, vector_store.py, lexical.py, hybrid.py
