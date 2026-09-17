@@ -41,6 +41,7 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Commit + push
 
 ## Phase 6 — Finalize
-- [ ] README.md
-- [ ] Fresh clone + `uv sync` + full test/eval suite reproduces
-- [ ] Final commit + push: `docs: finalize OnboardAgent v1`
+- [x] README.md
+- [x] Fresh clone + `uv sync` + full test suite reproduces (eval verified separately across
+      multiple live runs against real repos, incl. a genuinely unseen one)
+- [x] Final commit + push: `docs: finalize OnboardAgent v1`

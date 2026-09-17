@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+import onboard_agent.cli._console_encoding  # noqa: F401  (import for its UTF-8 reconfigure side effect)
 from onboard_agent.agent.loop import ask_onboarding_question
 from onboard_agent.ingestion.pipeline import (
     RepoContext,
