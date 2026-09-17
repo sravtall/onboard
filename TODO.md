@@ -20,9 +20,9 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Commit + push
 
 ## Phase 2 — Hybrid indexing & retrieval
-- [ ] indexing/embeddings.py, vector_store.py, lexical.py, hybrid.py
-- [ ] Verify: exact-identifier query + paraphrased query both surface right chunk; RRF unit tests
-- [ ] Commit + push
+- [x] indexing/embeddings.py, vector_store.py, lexical.py, hybrid.py
+- [x] Verify: exact-identifier query + paraphrased query both surface right chunk; RRF unit tests
+- [x] Commit + push
 
 ## Phase 3 — Answering agent
 - [ ] tools/{schemas,search_codebase,read_file,list_structure}.py
