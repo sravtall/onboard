@@ -1,0 +1,36 @@
+# Eval fixture for psf/requests. commit_sha records what the numbers in EVALS.md were
+# validated against — see PLAN.md decision #17 for why it isn't an enforced checkout pin in v1.
+repo_url: https://github.com/psf/requests
+commit_sha: dae7ef63b4df6eded86637f251fc4e3a06c3b479
+
+questions:
+  - question: "How does requests handle HTTP Basic and Digest authentication?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/auth.py
+
+  - question: "How does requests implement persistent sessions and cookie handling across multiple requests?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/sessions.py
+
+  - question: "How does requests manage HTTP connection pooling and retries at the transport-adapter layer?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/adapters.py
+
+  - question: "What exception type does requests raise when a request times out?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/exceptions.py
+
+  - question: "What's the test setup for this repo -- what testing tooling and fixtures does it use?"
+    answerable: true
+    expected_relevant_files:
+      - tests/conftest.py
+
+  - question: "How does this codebase implement GraphQL query batching?"
+    answerable: false
+
+  - question: "How does this repo schedule and manage Kubernetes pods?"
+    answerable: false

@@ -36,9 +36,9 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Commit + push
 
 ## Phase 5 — Evals
-- [ ] evals/fixtures/{requests,flask}.yaml, evals/harness.py, evals/metrics.py
-- [ ] Verify: `uv run` eval command prints metrics table, writes EVALS.md
-- [ ] Commit + push
+- [x] evals/fixtures/{requests,flask}.yaml, evals/harness.py, evals/metrics.py
+- [x] Verify: `uv run` eval command prints metrics table, writes EVALS.md
+- [x] Commit + push
 
 ## Phase 6 — Finalize
 - [ ] README.md

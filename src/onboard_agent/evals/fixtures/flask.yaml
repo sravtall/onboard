@@ -1,0 +1,39 @@
+# Eval fixture for pallets/flask. commit_sha records what the numbers in EVALS.md were
+# validated against — see PLAN.md decision #17 for why it isn't an enforced checkout pin in v1.
+repo_url: https://github.com/pallets/flask
+commit_sha: d73fa1cdcbd8b1465c151db8924ba58b1dd14e35
+
+questions:
+  - question: "Where do I add a new route or endpoint in this codebase?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/app.py
+      - src/flask/sansio/scaffold.py
+      - src/flask/sansio/app.py
+
+  - question: "How does Flask sign and manage session cookies?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/sessions.py
+
+  - question: "How do Blueprints work for organizing routes in Flask?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/blueprints.py
+      - src/flask/sansio/blueprints.py
+
+  - question: "How does the `flask run` command-line interface work?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/cli.py
+
+  - question: "What's the test setup for this repo -- what testing tooling and fixtures does it use?"
+    answerable: true
+    expected_relevant_files:
+      - tests/conftest.py
+
+  - question: "How does this codebase implement a GraphQL API?"
+    answerable: false
+
+  - question: "How does this repo manage Kubernetes deployments?"
+    answerable: false

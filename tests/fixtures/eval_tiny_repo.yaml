@@ -1,0 +1,13 @@
+# Minimal eval-fixture YAML used only by tests/unit/test_eval_harness.py to test
+# load_fixture() parsing -- not one of the "official" eval repos in EVALS.md.
+repo_url: https://github.com/example/tiny_repo
+commit_sha: deadbeef
+
+questions:
+  - question: "How do I register a new user?"
+    answerable: true
+    expected_relevant_files:
+      - classes_and_methods.py
+
+  - question: "How does this repo integrate with Stripe for payment processing?"
+    answerable: false

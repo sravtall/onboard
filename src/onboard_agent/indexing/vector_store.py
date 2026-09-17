@@ -19,7 +19,10 @@ _TABLE_NAME = "chunks"
 
 
 def _chunk_embedding_text(chunk: Chunk) -> str:
-    return f"{chunk.symbol}\n{chunk.summary}\n{chunk.code_text}"
+    # file_path is included so a query naming or implying a specific module (e.g. "conftest",
+    # "cli.py") has something to match against even when that filename never appears in the
+    # chunk's own body — see PLAN.md decision #18.
+    return f"{chunk.file_path}\n{chunk.symbol}\n{chunk.summary}\n{chunk.code_text}"
 
 
 class VectorStore:
