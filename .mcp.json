@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "onboard-agent": {
+      "command": "uv",
+      "args": ["run", "python", "src/onboard_agent/mcp_server/server.py"]
+    }
+  }
+}
