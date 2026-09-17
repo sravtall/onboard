@@ -61,6 +61,31 @@ def _read_chunks(path: Path) -> list[Chunk]:
     return chunks
 
 
+def _build_context_from_directory(
+    source_dir: Path, org: str, repo: str, repo_url: str, commit_sha: str, cache_dir: Path
+) -> RepoContext:
+    """Chunk, map, index, and persist a repo whose files already sit in `source_dir` (already a
+    persistent, read-only location — this never touches the network or the original clone)."""
+    chunks = chunk_repo(source_dir)
+    repo_map = build_repo_map(source_dir, repo_url, commit_sha)
+
+    _write_chunks(chunks, chunks_path(cache_dir))
+    repo_map_path(cache_dir).write_text(repo_map.model_dump_json(indent=2), encoding="utf-8")
+
+    retriever = HybridRetriever(VectorStore(lancedb_path(cache_dir)), LexicalIndex())
+    retriever.build(chunks)
+
+    return RepoContext(
+        org=org,
+        repo=repo,
+        commit_sha=commit_sha,
+        repo_root=source_dir,
+        chunks=chunks,
+        repo_map=repo_map,
+        retriever=retriever,
+    )
+
+
 def ingest_repo(url: str) -> RepoContext:
     """Clone `url`, chunk it, build the repo map and hybrid index, and persist everything to
     the per-repo cache. Always does a fresh clone — use `load_cached_repo_context` first if you
@@ -76,24 +101,20 @@ def ingest_repo(url: str) -> RepoContext:
             shutil.rmtree(persistent_clone)
         shutil.copytree(sandbox_dir, persistent_clone, ignore=shutil.ignore_patterns(".git"))
 
-    chunks = chunk_repo(persistent_clone)
-    repo_map = build_repo_map(persistent_clone, url, commit_sha)
+    return _build_context_from_directory(persistent_clone, org, repo, url, commit_sha, cache_dir)
 
-    _write_chunks(chunks, chunks_path(cache_dir))
-    repo_map_path(cache_dir).write_text(repo_map.model_dump_json(indent=2), encoding="utf-8")
 
-    retriever = HybridRetriever(VectorStore(lancedb_path(cache_dir)), LexicalIndex())
-    retriever.build(chunks)
+def ingest_local_directory(path: Path, label: str = "local") -> RepoContext:
+    """Build a RepoContext directly from an already-on-disk directory — no cloning, no network.
 
-    return RepoContext(
-        org=org,
-        repo=repo,
-        commit_sha=commit_sha,
-        repo_root=persistent_clone,
-        chunks=chunks,
-        repo_map=repo_map,
-        retriever=retriever,
-    )
+    For pointing OnboardAgent at a repo you already have checked out, and for tests/evals that
+    need a real end-to-end ingestion without depending on GitHub access. `path`'s contents are
+    only ever read/parsed, never executed, same as a cloned repo.
+    """
+    path = path.resolve()
+    cache_dir = repo_cache_dir("local", label, "local")
+    repo_url = f"file://{path}"
+    return _build_context_from_directory(path, "local", label, repo_url, "local", cache_dir)
 
 
 def find_cached_repo_dir(org: str, repo: str) -> Path | None:

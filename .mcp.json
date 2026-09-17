@@ -2,7 +2,10 @@
   "mcpServers": {
     "onboard-agent": {
       "command": "uv",
-      "args": ["run", "python", "src/onboard_agent/mcp_server/server.py"]
+      "args": ["run", "python", "-m", "onboard_agent.mcp_server.server"],
+      "env": {
+        "ONBOARD_AGENT_REPO_URL": "https://github.com/psf/requests"
+      }
     }
   }
 }

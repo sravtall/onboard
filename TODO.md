@@ -31,9 +31,9 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Commit + push
 
 ## Phase 4 — MCP server + CLI
-- [ ] mcp_server/server.py (4 tools) + cli/main.py (ingest/ask/serve-mcp/eval)
-- [ ] Verify: MCP client lists 4 tools and calls them; CLI answers a real question with citations
-- [ ] Commit + push
+- [x] mcp_server/server.py (4 tools) + cli/main.py (ingest/ask/serve-mcp/eval)
+- [x] Verify: MCP client lists 4 tools and calls them; CLI answers a real question with citations
+- [x] Commit + push
 
 ## Phase 5 — Evals
 - [ ] evals/fixtures/{requests,flask}.yaml, evals/harness.py, evals/metrics.py
