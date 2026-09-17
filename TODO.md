@@ -25,10 +25,10 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Commit + push
 
 ## Phase 3 — Answering agent
-- [ ] tools/{schemas,search_codebase,read_file,list_structure}.py
-- [ ] agent/{prompts,loop,grounding}.py
-- [ ] Verify (requires ANTHROPIC_API_KEY): cited grounded answer; honest refusal on unanswerable question
-- [ ] Commit + push
+- [x] tools/{schemas,search_codebase,read_file,list_structure}.py
+- [x] agent/{prompts,loop,grounding}.py
+- [x] Verify (requires ANTHROPIC_API_KEY): cited grounded answer; honest refusal on unanswerable question
+- [x] Commit + push
 
 ## Phase 4 — MCP server + CLI
 - [ ] mcp_server/server.py (4 tools) + cli/main.py (ingest/ask/serve-mcp/eval)

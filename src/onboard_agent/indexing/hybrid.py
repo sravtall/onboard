@@ -99,6 +99,11 @@ class HybridRetriever:
         self._vector_store.build(chunks)
         self._lexical_index.build(chunks)
 
+    def attach_chunk_registry(self, chunks: list[Chunk]) -> None:
+        """Register the chunk registry for a vector store / lexical index that were already
+        built elsewhere (e.g. loaded from cache) — does not re-embed or re-index."""
+        self._chunks_by_id = {c.chunk_id: c for c in chunks}
+
     def search(
         self,
         query: str,
