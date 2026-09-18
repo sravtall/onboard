@@ -106,3 +106,4 @@ class GenerateOverviewOutput(BaseModel):
     citations: list[str]
     verified: bool
     unverified_citations: list[str]
+    retrieved_files: list[str] = []

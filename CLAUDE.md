@@ -18,9 +18,10 @@ searchable index, and answer onboarding questions with citations to exact file/l
 ## Architecture invariant
 
 `src/onboard_agent/tools/` holds the **only** implementation of `search_codebase`, `read_file`,
-and `list_structure`. The Tool Runner agent loop (`agent/loop.py`) and the MCP server
-(`mcp_server/server.py`) are both thin adapters over these functions — never duplicate retrieval
-or file-reading logic in either adapter.
+and `list_structure`. The Tool Runner agent loop (`agent/loop.py`), `agent/overview.py`, the MCP
+server (`mcp_server/server.py`), and the Streamlit UI (`ui/app.py`) are all thin adapters over
+these functions (and over `agent/loop.py`/`agent/overview.py` for the UI) — never duplicate
+retrieval, file-reading, or agent-loop logic in any adapter.
 
 ## Security invariant — untrusted repos
 

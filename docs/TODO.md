@@ -100,7 +100,22 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [ ] Commit: `feat: codebase overview generation`
 
 ## Phase 3 — Thin Streamlit UI
-- [ ] Not started
+- [x] Verified Streamlit's current API (session_state semantics, st.rerun) via docs before writing
+- [x] `uv add streamlit` (1.64.0, resolves cleanly on Python 3.12)
+- [x] New `ui/` package: `src/onboard_agent/ui/app.py` -- thin adapter only, no new business logic
+- [x] Sidebar ingest (repo URL or local path), `st.session_state.ctx` persists across reruns
+- [x] Ask-a-question / Generate-overview mode toggle
+- [x] Citations render as `st.expander` calling the real `read_file` tool on demand (not a
+      re-implementation); verification banner matches CLI wording
+- [x] Retrieval-provenance panel -- added `retrieved_files` field to `AnswerResult`/
+      `GenerateOverviewOutput` to support it
+- [x] Updated CLAUDE.md's architecture-invariant paragraph to name `ui/app.py` as a third thin
+      adapter
+- [x] docs/PLAN.md decisions #26 (citation-expander interpretation), #27 (retrieved_files field)
+- [x] Live-verified in an actual browser: ingested the tiny fixture repo, asked a real question,
+      confirmed the answer, "All 6 citations verified" banner, all 6 expandable code snippets, and
+      "Retrieval provenance: 3 file(s) searched this session" panel all render correctly
+- [ ] Commit: `feat: thin web UI for demos`
 
 ## Phase 4 — MCP dogfood + finalize
 - [ ] Not started

@@ -87,4 +87,5 @@ def generate_overview(ctx: RepoContext, focus: str | None = None) -> GenerateOve
         citations=[c.as_str() for c in report.citations],
         verified=report.verified,
         unverified_citations=[c.as_str() for c in report.unverified_citations],
+        retrieved_files=sorted({span.file_path for span in retrieved}),
     )

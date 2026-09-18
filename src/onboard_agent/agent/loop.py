@@ -40,6 +40,7 @@ class AnswerResult(BaseModel):
     citations: list[str]
     verified: bool
     unverified_citations: list[str]
+    retrieved_files: list[str] = []
 
 
 def build_tools(ctx: RepoContext, retrieved: list[RetrievedSpan]) -> list:
@@ -118,4 +119,5 @@ def ask_onboarding_question(question: str, ctx: RepoContext) -> AnswerResult:
         citations=[c.as_str() for c in report.citations],
         verified=report.verified,
         unverified_citations=[c.as_str() for c in report.unverified_citations],
+        retrieved_files=sorted({span.file_path for span in retrieved}),
     )
