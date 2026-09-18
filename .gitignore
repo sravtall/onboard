@@ -22,3 +22,4 @@ Thumbs.db
 .onboard_cache/
 *.lance/
 data/repos/
+.scratch/
