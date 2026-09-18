@@ -1,4 +1,4 @@
-"""Eval report data model and Markdown rendering for EVALS.md."""
+"""Eval report data model and Markdown rendering for docs/EVALS.md."""
 
 from __future__ import annotations
 

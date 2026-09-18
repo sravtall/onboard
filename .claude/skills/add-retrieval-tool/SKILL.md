@@ -56,4 +56,4 @@ Both wrappers should be thin — call straight into `tools/<tool_name>.py`, no l
 - Add the tool to the list in `CLAUDE.md`'s architecture invariant section if it's a core
   retrieval primitive.
 - Update `README.md`'s tool list (Phase 6) and, if it changes what a citation looks like, note
-  it in `PLAN.md`'s Decisions table.
+  it in `docs/PLAN.md`'s Decisions table.

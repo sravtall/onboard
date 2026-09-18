@@ -5,8 +5,9 @@ questions like *"how does auth work here?"*, *"where do I add an endpoint?"*, or
 test setup?"* — every claim in the answer is backed by a citation to a real `file.py:START-END`
 range, and the agent says so explicitly when it can't find something rather than guessing.
 
-Built end to end from [`kickoff.md`](kickoff.md); see [`PLAN.md`](PLAN.md) for the full decision
-log and [`EVALS.md`](EVALS.md) for measured results.
+Built end to end from [`docs/kickoff.md`](docs/kickoff.md) and [`docs/PHASE2.md`](docs/PHASE2.md);
+see [`docs/PLAN.md`](docs/PLAN.md) for the full decision log and [`docs/EVALS.md`](docs/EVALS.md)
+for measured results.
 
 ## What it does
 
@@ -125,7 +126,7 @@ invariant). `agent/grounding.py` checks every citation in an answer against code
 retrieved that session before returning it, surfacing `verified: bool` and any unverified
 citations rather than hiding them.
 
-### Key decisions (see [`PLAN.md`](PLAN.md) for the full table with rationale)
+### Key decisions (see [`docs/PLAN.md`](docs/PLAN.md) for the full table with rationale)
 
 - **Vector store:** LanceDB — embedded, disk-backed, no separate server process.
 - **Embeddings:** local `sentence-transformers`, no external API/key (Anthropic has no public
@@ -139,7 +140,7 @@ citations rather than hiding them.
 
 ## Eval results
 
-See [`EVALS.md`](EVALS.md) for the full table and notes (including an honest discussion of
+See [`docs/EVALS.md`](docs/EVALS.md) for the full table and notes (including an honest discussion of
 live-model non-determinism and a known retrieval weak spot). Summary from the latest run against
 `psf/requests` and `pallets/flask`:
 
@@ -172,8 +173,8 @@ lives under [`.claude/`](.claude/).
 **In scope:** read-only understanding of Python repos — ingestion, indexing, hybrid retrieval,
 cited question-answering, an MCP server, a CLI, and an eval harness.
 
-**Explicitly out of scope for v1** (see `PLAN.md`'s "Future work" section for the full list and
-why):
+**Explicitly out of scope for v1** (see `docs/PLAN.md`'s "Future work" section for the full list
+and why):
 
 - Writing or proposing code changes
 - Non-Python languages

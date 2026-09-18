@@ -1,5 +1,5 @@
 """Hybrid retrieval: dense (LanceDB) + lexical (BM25) fused via Reciprocal Rank Fusion, then a
-cheap algorithmic rerank. See PLAN.md decisions #6-7 for why RRF and why no cross-encoder.
+cheap algorithmic rerank. See docs/PLAN.md decisions #6-7 for why RRF and why no cross-encoder.
 
 Retrieval is "wide" (top-N per ranker, fused) then narrowed by rerank to the final top-K handed
 to a caller (the agent's search_codebase tool, or an eval).
@@ -60,7 +60,7 @@ def _rerank(
     query: str,
 ) -> list[RetrievalResult]:
     """Cheap, deterministic rerank over the fused candidate set — no cross-encoder / LLM call,
-    so retrieval stays testable without an API key (PLAN.md decision #7)."""
+    so retrieval stays testable without an API key (docs/PLAN.md decision #7)."""
     q_tokens = _query_tokens(query)
     setup_query = bool(q_tokens & _SETUP_QUERY_WORDS)
 

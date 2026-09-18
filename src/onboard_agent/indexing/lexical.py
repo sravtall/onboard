@@ -10,7 +10,7 @@ from onboard_agent.chunking.models import Chunk
 
 def _chunk_lexical_text(chunk: Chunk) -> str:
     # file_path included for the same reason as the dense embedding text — see
-    # indexing/vector_store.py and PLAN.md decision #18.
+    # indexing/vector_store.py and docs/PLAN.md decision #18.
     return f"{chunk.file_path}\n{chunk.symbol}\n{chunk.summary}\n{chunk.code_text}"
 
 

@@ -32,6 +32,6 @@ they stay within the cloned repo root before touching disk.
 
 ## Where to look
 
-- `PLAN.md` — architecture decisions and their rationale (append to "Decisions" as they're made).
-- `TODO.md` — live phase checklist.
-- `kickoff.md` — the original build brief this project follows.
+- `docs/PLAN.md` — architecture decisions and their rationale (append to "Decisions" as they're made).
+- `docs/TODO.md` — live phase checklist.
+- `docs/kickoff.md`, `docs/PHASE2.md` — the original build briefs this project follows.

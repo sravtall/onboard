@@ -1,5 +1,5 @@
 """The answering agent: an Anthropic Tool Runner loop over the three retrieval tools, producing
-a grounded, cited answer. PLAN.md decision #8 explains why Tool Runner over a manual loop or
+a grounded, cited answer. docs/PLAN.md decision #8 explains why Tool Runner over a manual loop or
 Managed Agents.
 
 ask_onboarding_question is the single entry point — it is itself the 4th tool exposed by the

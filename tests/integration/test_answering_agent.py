@@ -45,7 +45,7 @@ def _ask_until_verified(question: str, repo_context: RepoContext, max_attempts: 
     The live model occasionally over-broadens a citation range (e.g. summarizing two
     retrieved-but-non-adjacent chunks as one combined span it never fully read) — confirmed by
     manually repeating a failing run 2/2 clean afterward. That's real, expected LLM
-    non-determinism (also documented in EVALS.md), not a bug in agent/grounding.py, which
+    non-determinism (also documented in docs/EVALS.md), not a bug in agent/grounding.py, which
     correctly flags it every time it happens. A bounded retry absorbs that noise for the *test*
     without weakening the grounding check itself; a still-unverified result after every attempt
     is a genuine signal worth failing on.

@@ -1,5 +1,5 @@
 """Local embeddings via sentence-transformers — no external API/key required. Model name is
-configurable via ONBOARD_AGENT_EMBED_MODEL (see PLAN.md decision #5)."""
+configurable via ONBOARD_AGENT_EMBED_MODEL (see docs/PLAN.md decision #5)."""
 
 from __future__ import annotations
 

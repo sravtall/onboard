@@ -109,7 +109,7 @@ def run_eval_command(
         False, "--retrieval-only", help="Skip the answering agent; score retrieval recall only"
     ),
 ):
-    """Run the eval harness and print a metrics table (see EVALS.md)."""
+    """Run the eval harness and print a metrics table (see docs/EVALS.md)."""
     from onboard_agent.evals.harness import run_evals
 
     report = run_evals(
@@ -129,7 +129,7 @@ def run_eval_command(
             "n/a" if row.refusal_accuracy is None else f"{row.refusal_accuracy:.0%}",
         )
     console.print(table)
-    report.write_markdown(Path("EVALS.md"))
+    report.write_markdown(Path("docs/EVALS.md"))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """System prompt construction: a static instructions block plus a per-repo "repo map" block
 that's cache_control-marked so it's reused across every question asked against the same repo in
-a session (PLAN.md decision #10)."""
+a session (docs/PLAN.md decision #10)."""
 
 from __future__ import annotations
 

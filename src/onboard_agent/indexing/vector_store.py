@@ -3,7 +3,7 @@ indexing/embeddings.py, this module only stores and searches them.
 
 LanceDB chosen over pgvector/Chroma: embedded (no separate server process, unlike a Postgres
 dependency), disk-backed via Apache Arrow/Lance so it scales past RAM (unlike Chroma's
-memory-first default) — appropriate for a local CLI tool. See PLAN.md decision #4.
+memory-first default) — appropriate for a local CLI tool. See docs/PLAN.md decision #4.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ _TABLE_NAME = "chunks"
 def _chunk_embedding_text(chunk: Chunk) -> str:
     # file_path is included so a query naming or implying a specific module (e.g. "conftest",
     # "cli.py") has something to match against even when that filename never appears in the
-    # chunk's own body — see PLAN.md decision #18.
+    # chunk's own body — see docs/PLAN.md decision #18.
     return f"{chunk.file_path}\n{chunk.symbol}\n{chunk.summary}\n{chunk.code_text}"
 
 

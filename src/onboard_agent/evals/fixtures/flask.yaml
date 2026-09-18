@@ -1,5 +1,5 @@
-# Eval fixture for pallets/flask. commit_sha records what the numbers in EVALS.md were
-# validated against — see PLAN.md decision #17 for why it isn't an enforced checkout pin in v1.
+# Eval fixture for pallets/flask. commit_sha records what the numbers in docs/EVALS.md were
+# validated against — see docs/PLAN.md decision #17 for why it isn't an enforced checkout pin in v1.
 repo_url: https://github.com/pallets/flask
 commit_sha: d73fa1cdcbd8b1465c151db8924ba58b1dd14e35
 

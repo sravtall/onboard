@@ -1,5 +1,5 @@
 # Minimal eval-fixture YAML used only by tests/unit/test_eval_harness.py to test
-# load_fixture() parsing -- not one of the "official" eval repos in EVALS.md.
+# load_fixture() parsing -- not one of the "official" eval repos in docs/EVALS.md.
 repo_url: https://github.com/example/tiny_repo
 commit_sha: deadbeef
 
