@@ -118,4 +118,14 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [ ] Commit: `feat: thin web UI for demos`
 
 ## Phase 4 — MCP dogfood + finalize
-- [ ] Not started
+- [x] Verified `uv run --directory <path>` flag spelling via `uv run --help`
+- [x] README: web UI usage section, external MCP registration section with copy-pasteable
+      `.mcp.json` snippet, refreshed architecture diagram (agent/overview.py, ui/app.py),
+      refreshed eval summary table (Phase 2, all 4 repos), Scope section updated (web UI +
+      overview generation now in scope), new honest "Limitations & v2 next-steps" section
+- [x] Fixed a real footgun found by hitting it twice this session: `onboard eval` no longer
+      overwrites docs/EVALS.md by default -- now requires an explicit `--write-report` flag
+      (docs/PLAN.md decision #28)
+- [x] Fresh-clone-equivalent reproducibility confirmed: `uv sync`, full `pytest -q` (78 passed,
+      including live-API tests), `onboard eval --retrieval-only` all green
+- [ ] Commit: `docs: finalize OnboardAgent Phase 2`

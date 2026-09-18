@@ -153,6 +153,13 @@ def run_eval_command(
     retrieval_only: bool = typer.Option(
         False, "--retrieval-only", help="Skip the answering agent; score retrieval recall only"
     ),
+    write_report: bool = typer.Option(
+        False,
+        "--write-report",
+        help="Overwrite docs/EVALS.md with a bare metrics table (default: print only). "
+        "docs/EVALS.md normally carries hand-written analysis alongside the numbers -- "
+        "this flag replaces all of it, so it's opt-in rather than a side effect of every run.",
+    ),
 ):
     """Run the eval harness and print a metrics table (see docs/EVALS.md)."""
     from onboard_agent.evals.harness import run_evals
@@ -174,7 +181,9 @@ def run_eval_command(
             "n/a" if row.refusal_accuracy is None else f"{row.refusal_accuracy:.0%}",
         )
     console.print(table)
-    report.write_markdown(Path("docs/EVALS.md"))
+    if write_report:
+        report.write_markdown(Path("docs/EVALS.md"))
+        console.print("[dim]Wrote docs/EVALS.md (overwrote any hand-written analysis).[/dim]")
 
 
 if __name__ == "__main__":

@@ -58,6 +58,8 @@ duplicated retrieval/read logic between the two exposure surfaces.
 | 26 | Streamlit UI: a citation "resolves to file+line" by rendering as an `st.expander` that calls `read_file` on demand when opened, not an IDE jump-to-line | This is the concrete, achievable meaning of "clickable citation" for a local single-user Streamlit app — there's no code editor to jump into. Reuses the real `read_file` tool (never a re-implementation), so the snippet shown is guaranteed to match what the agent actually saw |
 | 27 | Added `retrieved_files: list[str] = []` to both `AnswerResult` and `GenerateOverviewOutput` | The UI's "retrieval provenance" panel needs to show every file the agent actually searched/read that session, not just the ones it ended up citing — this was already being tracked internally as the `retrieved: list[RetrievedSpan]` list passed to `verify_answer`, just never surfaced on the result object. Verified live in the browser: a real question against the tiny fixture repo correctly showed "3 file(s) searched this session" including a file that was read but never cited |
 
+| 28 | `onboard eval` no longer overwrites `docs/EVALS.md` by default -- only with an explicit `--write-report` flag | Got bitten by this twice in this session: `write_markdown()` fully replaces the file with a bare table, silently destroying the hand-written failure-taxonomy analysis every time someone runs a sanity-check eval. Recovered via git both times, but a CLI shouldn't have a destructive side effect as its default behavior for what looks like a read-only "run and print" command |
+
 ## Future work / v2 (explicitly out of scope for v1)
 
 - Writing or proposing code changes (v1 is read-only).
