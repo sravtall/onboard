@@ -26,7 +26,11 @@ from onboard_agent.tools.schemas import (
 )
 from onboard_agent.tools.search_codebase import search_codebase as _search_codebase_impl
 
-MAX_TOOL_ITERATIONS = 8
+MAX_TOOL_ITERATIONS = 20
+"""Phase 2 baseline eval showed 8 was too tight: a live run hit it mid-tool-call-planning on a
+genuinely multi-file question (Flask session cookies span sessions.py + app.py's SECRET_KEY
+config), and Tool Runner stopped without ever letting the model synthesize a final answer --
+the "answer" was a stray preamble sentence with zero citations (docs/PLAN.md decision #23)."""
 MAX_ANSWER_TOKENS = 16000
 
 

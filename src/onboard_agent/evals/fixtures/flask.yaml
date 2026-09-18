@@ -32,6 +32,31 @@ questions:
     expected_relevant_files:
       - tests/conftest.py
 
+  - question: "How does Flask manage the application/request context stack, and what's the difference between an app context and a request context?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/ctx.py
+      - src/flask/globals.py
+    notes: "In Flask 3.2+, AppContext and RequestContext were merged into one AppContext class; request_ctx is now a deprecated alias."
+
+  - question: "How does Flask wire up Jinja and render templates -- what happens when I call render_template()?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/templating.py
+
+  - question: "How does Flask turn exceptions into HTTP error responses, and where do I register a custom error handler?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/app.py
+      - src/flask/sansio/app.py
+
+  - question: "Where does the `g` object come from and how does Flask load app configuration (e.g. from a file or environment)?"
+    answerable: true
+    expected_relevant_files:
+      - src/flask/ctx.py
+      - src/flask/globals.py
+      - src/flask/config.py
+
   - question: "How does this codebase implement a GraphQL API?"
     answerable: false
 

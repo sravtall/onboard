@@ -1,0 +1,67 @@
+# Eval fixture for pallets/click. commit_sha records what the numbers in docs/EVALS.md were
+# validated against -- see docs/PLAN.md decision #17 for why it isn't an enforced checkout pin in v1.
+repo_url: https://github.com/pallets/click
+commit_sha: 6aabf099bfdd4c1e75fe8d0e0d4241372b988ab1
+
+questions:
+  - question: "How do I define a CLI command with @click.command, and what does the decorator actually attach to the function?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/decorators.py
+      - src/click/core.py
+
+  - question: "How does @click.option differ from @click.argument, and where are they implemented?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/decorators.py
+      - src/click/core.py
+
+  - question: "What built-in parameter types does Click provide for validating/converting option and argument values (e.g. int ranges, choices, file paths)?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/types.py
+
+  - question: "How does Click prompt a user for input interactively, and how is a yes/no confirmation implemented?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/termui.py
+
+  - question: "How does Click pass shared state (like a config object) down from a parent command to subcommands?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/core.py
+      - src/click/decorators.py
+
+  - question: "How do I group multiple subcommands under one CLI entry point (like git commit, git push)?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/core.py
+      - src/click/decorators.py
+
+  - question: "How does shell tab-completion work in Click, and which shells are supported?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/shell_completion.py
+
+  - question: "How do I unit test a Click CLI command without actually running it as a subprocess?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/testing.py
+
+  - question: "What exception types does Click define for CLI errors (bad params, missing args, etc.), and how do they get displayed to the user?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/exceptions.py
+
+  - question: "How does Click actually parse raw sys.argv into option/argument values before dispatching to a command's callback?"
+    answerable: true
+    expected_relevant_files:
+      - src/click/core.py
+      - src/click/parser.py
+
+  - question: "Does Click provide a GraphQL query/schema layer for building CLI-driven APIs?"
+    answerable: false
+
+  - question: "How do I write an async (async def) command callback that Click runs natively with asyncio?"
+    answerable: false
+    notes: "Not natively supported -- that's what the third-party asyncclick fork exists for."

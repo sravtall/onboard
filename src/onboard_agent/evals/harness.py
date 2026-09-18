@@ -8,8 +8,9 @@ from pathlib import Path
 
 import yaml
 
-from onboard_agent.agent.loop import ask_onboarding_question
+from onboard_agent.agent.loop import AnswerResult, ask_onboarding_question
 from onboard_agent.evals.metrics import EvalReport, RepoEvalResult
+from onboard_agent.evals.taxonomy import FailureLabel, QuestionResult
 from onboard_agent.ingestion.pipeline import RepoContext, get_or_ingest_repo_context
 from onboard_agent.tools.schemas import SearchCodebaseInput
 from onboard_agent.tools.search_codebase import search_codebase
@@ -23,6 +24,8 @@ class EvalQuestion:
     question: str
     answerable: bool = True
     expected_relevant_files: list[str] = field(default_factory=list)
+    question_id: str = ""
+    notes: str = ""
 
 
 def load_fixture(path: Path) -> tuple[str, list[EvalQuestion]]:
@@ -32,6 +35,8 @@ def load_fixture(path: Path) -> tuple[str, list[EvalQuestion]]:
             question=q["question"],
             answerable=q.get("answerable", True),
             expected_relevant_files=q.get("expected_relevant_files", []),
+            question_id=q.get("question_id", ""),
+            notes=q.get("notes", ""),
         )
         for q in data["questions"]
     ]
@@ -81,6 +86,62 @@ def score_answering(
     refusal_accuracy = (correct_refusals / len(unanswerable)) if unanswerable else None
 
     return citation_groundedness, refusal_accuracy
+
+
+def classify_question_result(
+    ctx: RepoContext,
+    question: EvalQuestion,
+    result: AnswerResult,
+    top_k: int = DEFAULT_TOP_K,
+) -> QuestionResult:
+    """Label one already-answered question with a FailureLabel. `wrong_lines` is intentionally
+    never assigned automatically (see docs/PLAN.md) — a file-level hit with no ground-truth line
+    range to check against is scored `correct`; a case where the expected file was retrievable
+    but never cited comes back `needs_review` for a manual/explore-assisted follow-up pass."""
+    search_result = search_codebase(SearchCodebaseInput(query=question.question, top_k=top_k), ctx)
+    retrieved_files = [r.file_path for r in search_result.results]
+
+    if question.answerable:
+        if not result.verified:
+            label = FailureLabel.HALLUCINATED
+        elif not result.citations:
+            label = FailureLabel.INCORRECTLY_REFUSED
+        elif question.expected_relevant_files:
+            cited_files = {c.split(":", 1)[0] for c in result.citations}
+            expected = set(question.expected_relevant_files)
+            if cited_files & expected:
+                label = FailureLabel.CORRECT
+            elif set(retrieved_files) & expected:
+                label = FailureLabel.NEEDS_REVIEW
+            else:
+                label = FailureLabel.RETRIEVAL_MISS
+        else:
+            label = FailureLabel.CORRECT
+    else:
+        label = FailureLabel.CORRECT if result.verified else FailureLabel.SHOULD_REFUSE_BUT_DIDNT
+
+    return QuestionResult(
+        question_id=question.question_id or question.question[:48],
+        question=question.question,
+        answerable=question.answerable,
+        expected_relevant_files=question.expected_relevant_files,
+        retrieved_files=retrieved_files,
+        citations=result.citations,
+        verified=result.verified,
+        unverified_citations=result.unverified_citations,
+        failure_label=label,
+    )
+
+
+def run_taxonomy_eval(ctx: RepoContext, questions: list[EvalQuestion]) -> list[QuestionResult]:
+    """Run the live answering agent once per question and classify each result — the detailed,
+    per-question counterpart to score_answering's two aggregate rates. Use
+    taxonomy.citation_groundedness_from_results / taxonomy.refusal_accuracy_from_results to
+    derive the same two aggregates from the returned list without a second round of live calls."""
+    return [
+        classify_question_result(ctx, q, ask_onboarding_question(q.question, ctx))
+        for q in questions
+    ]
 
 
 def run_evals(fixtures_dir: Path | None = None, retrieval_only: bool = False) -> EvalReport:

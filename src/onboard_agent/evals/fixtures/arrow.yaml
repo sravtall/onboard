@@ -1,0 +1,65 @@
+# Eval fixture for arrow-py/arrow. commit_sha records what the numbers in docs/EVALS.md were
+# validated against -- see docs/PLAN.md decision #17 for why it isn't an enforced checkout pin in v1.
+repo_url: https://github.com/arrow-py/arrow
+commit_sha: 2224255c4acc594d734cef0bbc83360452a67983
+
+questions:
+  - question: "What's the core class that represents a datetime in this library, and how do I construct one directly?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+
+  - question: "How do I parse a date/time string into an Arrow object -- does it support ISO 8601 and custom formats?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/parser.py
+      - arrow/factory.py
+
+  - question: "How do I format an Arrow object back into a string, e.g. custom date formats?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+      - arrow/formatter.py
+
+  - question: "How does timezone conversion work -- how do I convert an Arrow timestamp to a different timezone?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+
+  - question: "How do I get a human-readable relative time like '2 hours ago' or 'in 4 hours'?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+      - arrow/locales.py
+
+  - question: "How do I get a range of dates/times between two points (e.g. every day between two dates)?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+
+  - question: "How do I get the start/end boundaries of a day/week/month for a given Arrow instance (e.g. 'start of day')?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+
+  - question: "What's the difference between arrow.get(), arrow.now(), and arrow.utcnow(), and where are they implemented?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/api.py
+      - arrow/factory.py
+
+  - question: "Does this library support multiple languages/locales for formatting and humanizing dates?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/locales.py
+
+  - question: "How do I shift a date by N days/months or replace specific components like year/month?"
+    answerable: true
+    expected_relevant_files:
+      - arrow/arrow.py
+
+  - question: "Does arrow support querying a database for scheduled events, e.g. via an ORM integration?"
+    answerable: false
+
+  - question: "Can I expose Arrow's date utilities over a GraphQL or gRPC API directly from this package?"
+    answerable: false

@@ -27,7 +27,29 @@ questions:
   - question: "What's the test setup for this repo -- what testing tooling and fixtures does it use?"
     answerable: true
     expected_relevant_files:
+      - pyproject.toml
       - tests/conftest.py
+    notes: "pyproject.toml carries [tool.pytest.ini_options] and the test dependency group (pytest-httpbin, pytest-cov, pytest-mock, pytest-xdist, trustme) -- conftest.py alone only covers fixtures, not tooling/config."
+
+  - question: "How does requests turn a Request into the actual bytes sent on the wire -- what is a PreparedRequest and how is it built?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/models.py
+
+  - question: "How does requests follow HTTP redirects, and what limits/guards does it apply?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/sessions.py
+
+  - question: "How does requests decode response content into text, and how does it detect the encoding when the server doesn't specify one?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/models.py
+
+  - question: "How is TLS/certificate verification implemented for HTTPS requests, and what do the verify/cert parameters actually control under the hood?"
+    answerable: true
+    expected_relevant_files:
+      - src/requests/adapters.py
 
   - question: "How does this codebase implement GraphQL query batching?"
     answerable: false

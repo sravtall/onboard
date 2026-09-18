@@ -19,7 +19,13 @@ DEFAULT_WIDE_K = 30
 DEFAULT_FINAL_K = 8
 
 _IDENTIFIER_BONUS = 0.05
+_FILENAME_BONUS = 0.06
 _MODULE_PENALTY = 0.02
+_TEST_FILE_PENALTY = 0.5
+"""Deliberately larger than any plausible fused-score + bonus total (~0.15 max) so a test file
+always sorts below every non-test candidate in the pool, not just a nudge -- test function names
+routinely echo the exact identifier being asked about (test_argument_... for an "argument"
+query), which would otherwise win the identifier-match bonus and cancel out a smaller penalty."""
 _SETUP_QUERY_WORDS = {
     "import",
     "imports",
@@ -28,6 +34,13 @@ _SETUP_QUERY_WORDS = {
     "structure",
     "config",
     "configuration",
+    "test",
+    "tests",
+    "testing",
+    "pytest",
+    "fixture",
+    "fixtures",
+    "conftest",
 }
 
 _WORD_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -53,6 +66,41 @@ def _query_tokens(query: str) -> set[str]:
     return {tok.lower() for tok in _WORD_RE.findall(query)}
 
 
+def _subword_tokens(text: str) -> set[str]:
+    """Tokenize text with dots/underscores treated as word breaks, so a snake_case identifier
+    like `run_command` or a dotted path like `Class.method` contributes its individual parts
+    ('run', 'command') as well as the whole — a query naming only one part of a multi-word
+    identifier (e.g. "how does flask run work" for `run_command`) still gets credit. Without
+    this, `_WORD_RE` treats underscores as word-internal and 'run_command' never matches 'run'."""
+    return _query_tokens(text.replace(".", " ").replace("_", " "))
+
+
+def _filename_stem_tokens(file_path: str) -> set[str]:
+    """Tokenize a chunk's filename stem (e.g. 'cli' from 'src/flask/cli.py', or 'conftest' from
+    'tests/conftest.py') so a query naming or implying a specific module has something to match
+    against even when that filename never appears in the chunk's own body.
+
+    Returns no tokens when the stem just repeats its own parent directory (e.g. arrow/arrow.py,
+    a common "central module named after the package" pattern) -- that name is also the
+    package's own name, so it appears in nearly every onboarding question about the library and
+    would otherwise make that one file win regardless of which sub-topic was actually asked
+    about (see docs/PLAN.md decision #22)."""
+    parts = file_path.split("/")
+    stem = parts[-1].rsplit(".", 1)[0]
+    if len(parts) >= 2 and stem.lower() == parts[-2].lower():
+        return set()
+    return _subword_tokens(stem)
+
+
+def _is_test_file(file_path: str) -> bool:
+    """True for test suite files (tests/ directory, test_*.py, conftest.py) -- NOT for source
+    files that merely have "test" in their name, like click's own src/click/testing.py."""
+    if file_path.startswith("tests/") or "/tests/" in file_path:
+        return True
+    basename = file_path.rsplit("/", 1)[-1]
+    return basename.startswith("test_") or basename == "conftest.py"
+
+
 def _rerank(
     candidate_ids: list[str],
     fused_scores: dict[str, float],
@@ -71,12 +119,17 @@ def _rerank(
             continue
         score = fused_scores[chunk_id]
 
-        symbol_tokens = _query_tokens(chunk.symbol.replace(".", " "))
-        if symbol_tokens & q_tokens:
+        if _subword_tokens(chunk.symbol) & q_tokens:
             score += _IDENTIFIER_BONUS
+
+        if _filename_stem_tokens(chunk.file_path) & q_tokens:
+            score += _FILENAME_BONUS
 
         if chunk.kind == ChunkKind.MODULE and not setup_query:
             score -= _MODULE_PENALTY
+
+        if _is_test_file(chunk.file_path) and not setup_query:
+            score -= _TEST_FILE_PENALTY
 
         scored.append(RetrievalResult(chunk=chunk, score=score))
 
