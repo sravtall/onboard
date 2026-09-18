@@ -11,6 +11,7 @@ from pathlib import Path
 from mcp.server import MCPServer
 
 from onboard_agent.agent.loop import ask_onboarding_question as _ask_onboarding_question_impl
+from onboard_agent.agent.overview import generate_overview as _generate_overview_impl
 from onboard_agent.ingestion.pipeline import (
     RepoContext,
     get_or_ingest_repo_context,
@@ -85,6 +86,20 @@ def ask_onboarding_question(question: str) -> str:
     session), and `unverified_citations`.
     """
     result = _ask_onboarding_question_impl(question, _get_repo_context())
+    return result.model_dump_json()
+
+
+@mcp.tool()
+def generate_overview(focus: str | None = None) -> str:
+    """Generate a cited onboarding overview of the ingested repo: architecture summary, key
+    modules, directory map, entry points, how to run/test, and where a new engineer should start
+    reading. Optionally pass `focus` to emphasize one area, e.g. "the authentication flow".
+
+    Returns JSON with `verified` (whether every citation was confirmed against code actually
+    retrieved this session) and `unverified_citations`, same grounding contract as
+    ask_onboarding_question.
+    """
+    result = _generate_overview_impl(_get_repo_context(), focus=focus)
     return result.model_dump_json()
 
 

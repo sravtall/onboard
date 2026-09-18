@@ -63,3 +63,11 @@ questions:
 
   - question: "Can I expose Arrow's date utilities over a GraphQL or gRPC API directly from this package?"
     answerable: false
+
+overview_check:
+  expected_entry_points:
+    - "api.py"
+  expected_key_modules:
+    - "arrow.py"
+    - "factory.py"
+    - "parser.py"

@@ -62,3 +62,12 @@ questions:
 
   - question: "How does this repo manage Kubernetes deployments?"
     answerable: false
+
+overview_check:
+  expected_entry_points:
+    - "cli.py"
+    - "wsgi_app"
+  expected_key_modules:
+    - "app.py"
+    - "blueprints.py"
+    - "sessions.py"

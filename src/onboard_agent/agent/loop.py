@@ -42,7 +42,11 @@ class AnswerResult(BaseModel):
     unverified_citations: list[str]
 
 
-def _build_tools(ctx: RepoContext, retrieved: list[RetrievedSpan]) -> list:
+def build_tools(ctx: RepoContext, retrieved: list[RetrievedSpan]) -> list:
+    """Shared by ask_onboarding_question and agent/overview.py's generate_overview -- the one
+    place the three read-only tools are wired up for a Tool Runner loop, so neither adapter
+    duplicates this against the docs/CLAUDE.md architecture invariant."""
+
     @beta_tool
     def search_codebase(query: str, top_k: int = 5) -> str:
         """Search the codebase with hybrid semantic + keyword search.
@@ -87,7 +91,7 @@ def _build_tools(ctx: RepoContext, retrieved: list[RetrievedSpan]) -> list:
 
 def ask_onboarding_question(question: str, ctx: RepoContext) -> AnswerResult:
     retrieved: list[RetrievedSpan] = []
-    tools = _build_tools(ctx, retrieved)
+    tools = build_tools(ctx, retrieved)
 
     client = anthropic.Anthropic()
     runner = client.beta.messages.tool_runner(

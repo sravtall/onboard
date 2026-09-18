@@ -56,3 +56,11 @@ questions:
 
   - question: "How does this repo schedule and manage Kubernetes pods?"
     answerable: false
+
+overview_check:
+  expected_entry_points:
+    - "api.py"
+  expected_key_modules:
+    - "sessions.py"
+    - "adapters.py"
+    - "models.py"

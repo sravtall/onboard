@@ -65,3 +65,44 @@ class StructureEntry(BaseModel):
 class ListStructureOutput(BaseModel):
     path: str
     entries: list[StructureEntry]
+
+
+class GenerateOverviewInput(BaseModel):
+    focus: str | None = Field(
+        default=None,
+        description="Optional area to emphasize, e.g. 'the authentication flow' or 'testing setup'",
+    )
+
+
+class OverviewSection(BaseModel):
+    heading: str
+    content: str = Field(
+        description="Prose for this section, with inline citations `path/to/file.py:START-END`"
+    )
+
+
+class OverviewContent(BaseModel):
+    """The model-facing structured output schema for generate_overview -- what the model itself
+    fills in. `GenerateOverviewOutput` wraps this with grounding-derived fields (citations,
+    verified, unverified_citations), the same split `AnswerResult` uses in `agent/loop.py`."""
+
+    architecture_summary: str = Field(description="A few paragraphs on the overall design")
+    key_modules: list[OverviewSection] = Field(
+        description="One section per major module/package, explaining what it does"
+    )
+    directory_map: str = Field(description="A short annotated tree of the notable directories")
+    entry_points: list[str] = Field(description="Where execution starts, e.g. CLI commands")
+    how_to_run_and_test: str = Field(description="How to install, run, and test this project")
+    where_to_start: str = Field(description="A concrete suggestion for a new engineer's first read")
+
+
+class GenerateOverviewOutput(BaseModel):
+    architecture_summary: str
+    key_modules: list[OverviewSection]
+    directory_map: str
+    entry_points: list[str]
+    how_to_run_and_test: str
+    where_to_start: str
+    citations: list[str]
+    verified: bool
+    unverified_citations: list[str]

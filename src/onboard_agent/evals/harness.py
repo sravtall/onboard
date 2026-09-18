@@ -12,7 +12,7 @@ from onboard_agent.agent.loop import AnswerResult, ask_onboarding_question
 from onboard_agent.evals.metrics import EvalReport, RepoEvalResult
 from onboard_agent.evals.taxonomy import FailureLabel, QuestionResult
 from onboard_agent.ingestion.pipeline import RepoContext, get_or_ingest_repo_context
-from onboard_agent.tools.schemas import SearchCodebaseInput
+from onboard_agent.tools.schemas import GenerateOverviewOutput, SearchCodebaseInput
 from onboard_agent.tools.search_codebase import search_codebase
 
 DEFAULT_FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -170,3 +170,41 @@ def run_evals(fixtures_dir: Path | None = None, retrieval_only: bool = False) ->
         )
 
     return EvalReport(rows=rows)
+
+
+def load_overview_check(path: Path) -> tuple[list[str], list[str]] | None:
+    """Reads a fixture's optional `overview_check: {expected_entry_points, expected_key_modules}`
+    block. Returns None if the fixture doesn't define one (not every fixture needs to)."""
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    check = data.get("overview_check")
+    if not check:
+        return None
+    return check.get("expected_entry_points", []), check.get("expected_key_modules", [])
+
+
+def score_overview_accuracy(
+    result: GenerateOverviewOutput,
+    expected_entry_points: list[str],
+    expected_key_modules: list[str],
+) -> tuple[float, float]:
+    """(entry_point_recall, key_module_recall): fraction of expected substrings (case-insensitive)
+    that appear somewhere in the overview's corresponding section. A generous substring match,
+    not exact-string equality -- the model's own phrasing of an entry point or module name will
+    vary run to run, so this checks for evidence the right things were found and mentioned, not
+    a specific wording."""
+    entry_text = " ".join(result.entry_points).lower()
+    entry_recall = (
+        sum(1 for e in expected_entry_points if e.lower() in entry_text)
+        / len(expected_entry_points)
+        if expected_entry_points
+        else 1.0
+    )
+
+    module_text = " ".join(f"{s.heading} {s.content}" for s in result.key_modules).lower()
+    module_recall = (
+        sum(1 for m in expected_key_modules if m.lower() in module_text) / len(expected_key_modules)
+        if expected_key_modules
+        else 1.0
+    )
+
+    return entry_recall, module_recall

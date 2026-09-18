@@ -32,7 +32,7 @@ def _text_of(result) -> str:
 
 
 @pytest.mark.asyncio
-async def test_all_four_tools_are_registered():
+async def test_all_five_tools_are_registered():
     async with stdio_client(_server_params()) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
@@ -43,6 +43,7 @@ async def test_all_four_tools_are_registered():
                 "read_file",
                 "list_structure",
                 "ask_onboarding_question",
+                "generate_overview",
             }
 
 
@@ -103,3 +104,16 @@ async def test_ask_onboarding_question_over_real_protocol_returns_a_grounded_ans
             payload = json.loads(_text_of(result))
             assert payload["verified"] is True
             assert any("classes_and_methods.py" in c for c in payload["citations"])
+
+
+@pytest.mark.skipif(not has_api_key(), reason="ANTHROPIC_API_KEY not set")
+@pytest.mark.asyncio
+async def test_generate_overview_over_real_protocol_returns_a_grounded_overview():
+    async with stdio_client(_server_params()) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.call_tool("generate_overview", {})
+            payload = json.loads(_text_of(result))
+            assert payload["verified"] is True
+            assert payload["architecture_summary"]
+            assert payload["key_modules"]

@@ -11,6 +11,7 @@ from rich.table import Table
 
 import onboard_agent.cli._console_encoding  # noqa: F401  (import for its UTF-8 reconfigure side effect)
 from onboard_agent.agent.loop import ask_onboarding_question
+from onboard_agent.agent.overview import generate_overview
 from onboard_agent.ingestion.pipeline import (
     RepoContext,
     get_or_ingest_repo_context,
@@ -71,6 +72,50 @@ def ask(
     result = ask_onboarding_question(question, ctx)
 
     console.print(result.answer)
+    console.print()
+    if result.citations:
+        console.print(f"[dim]Citations: {', '.join(result.citations)}[/dim]")
+    if not result.verified:
+        unverified = ", ".join(result.unverified_citations)
+        console.print(f"[yellow]Warning: unverified citations: {unverified}[/yellow]")
+
+
+@app.command()
+def overview(
+    repo_url: str | None = typer.Option(
+        None, "--repo", help="Repo URL (auto-ingests if not cached)"
+    ),
+    local_path: str | None = typer.Option(
+        None, "--local-path", help="Path to an already-checked-out repo (skips cloning)"
+    ),
+    focus: str | None = typer.Option(
+        None, "--focus", help="Area to emphasize, e.g. 'the authentication flow'"
+    ),
+):
+    """Generate a cited onboarding overview of a repo (architecture, key modules, how to run)."""
+    ctx = _resolve_repo_context(repo_url, local_path)
+    result = generate_overview(ctx, focus=focus)
+
+    console.print("[bold]Architecture[/bold]")
+    console.print(result.architecture_summary)
+    console.print()
+    console.print("[bold]Key modules[/bold]")
+    for section in result.key_modules:
+        console.print(f"[cyan]{section.heading}[/cyan]")
+        console.print(section.content)
+        console.print()
+    console.print("[bold]Directory map[/bold]")
+    console.print(result.directory_map)
+    console.print()
+    console.print("[bold]Entry points[/bold]")
+    for entry in result.entry_points:
+        console.print(f"- {entry}")
+    console.print()
+    console.print("[bold]How to run and test[/bold]")
+    console.print(result.how_to_run_and_test)
+    console.print()
+    console.print("[bold]Where to start[/bold]")
+    console.print(result.where_to_start)
     console.print()
     if result.citations:
         console.print(f"[dim]Citations: {', '.join(result.citations)}[/dim]")

@@ -7,13 +7,20 @@ from pathlib import Path
 import pytest
 
 from onboard_agent.chunking.chunker import chunk_repo
-from onboard_agent.evals.harness import EvalQuestion, load_fixture, score_retrieval_recall
+from onboard_agent.evals.harness import (
+    EvalQuestion,
+    load_fixture,
+    load_overview_check,
+    score_overview_accuracy,
+    score_retrieval_recall,
+)
 from onboard_agent.evals.metrics import EvalReport, RepoEvalResult
 from onboard_agent.indexing.hybrid import HybridRetriever
 from onboard_agent.indexing.lexical import LexicalIndex
 from onboard_agent.indexing.vector_store import VectorStore
 from onboard_agent.ingestion.pipeline import RepoContext
 from onboard_agent.ingestion.repo_map import build_repo_map
+from onboard_agent.tools.schemas import GenerateOverviewOutput, OverviewSection
 
 FIXTURE_REPO = Path(__file__).parent.parent / "fixtures" / "tiny_repo"
 SAMPLE_FIXTURE_YAML = Path(__file__).parent.parent / "fixtures" / "eval_tiny_repo.yaml"
@@ -75,6 +82,67 @@ def test_score_retrieval_recall_ignores_unanswerable_and_unlabeled_questions(rep
     ]
     # No questions with expected_relevant_files -> vacuously perfect recall
     assert score_retrieval_recall(repo_context, questions) == 1.0
+
+
+def _overview(entry_points, key_modules_text) -> GenerateOverviewOutput:
+    return GenerateOverviewOutput(
+        architecture_summary="",
+        key_modules=[OverviewSection(heading="mod", content=key_modules_text)],
+        directory_map="",
+        entry_points=entry_points,
+        how_to_run_and_test="",
+        where_to_start="",
+        citations=[],
+        verified=True,
+        unverified_citations=[],
+    )
+
+
+def test_score_overview_accuracy_full_match():
+    result = _overview(["cli.py entry point"], "see app.py and sessions.py for the core logic")
+    entry_recall, module_recall = score_overview_accuracy(
+        result, expected_entry_points=["cli.py"], expected_key_modules=["app.py", "sessions.py"]
+    )
+    assert entry_recall == 1.0
+    assert module_recall == 1.0
+
+
+def test_score_overview_accuracy_partial_match_is_case_insensitive():
+    result = _overview(["CLI.PY"], "only App.py is mentioned here")
+    entry_recall, module_recall = score_overview_accuracy(
+        result, expected_entry_points=["cli.py"], expected_key_modules=["app.py", "sessions.py"]
+    )
+    assert entry_recall == 1.0
+    assert module_recall == 0.5
+
+
+def test_score_overview_accuracy_vacuously_perfect_when_nothing_expected():
+    result = _overview([], "")
+    entry_recall, module_recall = score_overview_accuracy(
+        result, expected_entry_points=[], expected_key_modules=[]
+    )
+    assert entry_recall == 1.0
+    assert module_recall == 1.0
+
+
+def test_load_overview_check_reads_the_block(tmp_path):
+    fixture = tmp_path / "fixture.yaml"
+    fixture.write_text(
+        "repo_url: https://example.com/repo\n"
+        "questions: []\n"
+        "overview_check:\n"
+        "  expected_entry_points: [cli.py]\n"
+        "  expected_key_modules: [app.py, sessions.py]\n",
+        encoding="utf-8",
+    )
+    check = load_overview_check(fixture)
+    assert check == (["cli.py"], ["app.py", "sessions.py"])
+
+
+def test_load_overview_check_returns_none_when_absent(tmp_path):
+    fixture = tmp_path / "fixture.yaml"
+    fixture.write_text("repo_url: https://example.com/repo\nquestions: []\n", encoding="utf-8")
+    assert load_overview_check(fixture) is None
 
 
 def test_eval_report_writes_markdown_table(tmp_path):

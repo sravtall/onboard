@@ -82,7 +82,22 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Full `pytest -q` + commit: `test: baseline + improve core retrieval across real repos`
 
 ## Phase 2 — generate_overview
-- [ ] Not started
+- [x] Verified Tool Runner's `output_format` structured-output support against the installed SDK
+      (no custom "submit" tool needed)
+- [x] Schemas in tools/schemas.py: GenerateOverviewInput, OverviewSection, OverviewContent,
+      GenerateOverviewOutput
+- [x] agent/overview.py: generate_overview(ctx, focus=None), reusing loop.py's build_tools
+      (exported, no duplication) and grounding.py's verify_answer unchanged
+- [x] Own MAX_OVERVIEW_ITERATIONS=30 (higher than Q&A's 20) -- found and fixed the same class of
+      truncation bug as Phase 1's MAX_TOOL_ITERATIONS fix, this time for the broader overview task
+- [x] New system prompt: agent/prompts.py::build_overview_system_blocks
+- [x] New CLI command: `onboard overview [--repo|--local-path] [--focus]`
+- [x] New MCP tool: generate_overview (tool count 4 -> 5), integration test updated
+- [x] Eval extension: overview_check block (all 4 fixtures) + score_overview_accuracy, unit-tested
+- [x] Verified live against a real repo (arrow-py/arrow, with --focus): 45 citations, fully grounded
+- [x] docs/PLAN.md decisions #24 (output_format usage), #25 (MAX_OVERVIEW_ITERATIONS)
+- [x] Full pytest -q -m "not requires_api_key" green (75 passed)
+- [ ] Commit: `feat: codebase overview generation`
 
 ## Phase 3 — Thin Streamlit UI
 - [ ] Not started

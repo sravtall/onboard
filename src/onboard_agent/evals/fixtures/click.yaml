@@ -65,3 +65,11 @@ questions:
   - question: "How do I write an async (async def) command callback that Click runs natively with asyncio?"
     answerable: false
     notes: "Not natively supported -- that's what the third-party asyncclick fork exists for."
+
+overview_check:
+  expected_entry_points:
+    - "core.py"
+  expected_key_modules:
+    - "core.py"
+    - "decorators.py"
+    - "types.py"
