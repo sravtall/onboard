@@ -35,4 +35,5 @@ they stay within the cloned repo root before touching disk.
 
 - `docs/PLAN.md` — architecture decisions and their rationale (append to "Decisions" as they're made).
 - `docs/TODO.md` — live phase checklist.
-- `docs/kickoff.md`, `docs/PHASE2.md` — the original build briefs this project follows.
+- `docs/kickoff.md`, `docs/PHASE2.md`, `docs/PHASE3.md` — the original build briefs this project follows.
+- `docs/ROADMAP.md` — the project's self-proposed direction. At the end of every phase, follow `docs/ITERATION.md`.
