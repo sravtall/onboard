@@ -50,15 +50,42 @@ least one without regressing the others:
   and eval summary, honest Limitations & v2 next-steps section). Fixed a real footgun hit twice
   this session: `onboard eval` no longer silently overwrites `docs/EVALS.md`'s hand-written
   analysis — now requires an explicit `--write-report` flag.
+- **Phase 3 — cost research spike** (`docs/PHASE3.md` → `docs/COST-RESEARCH.md`): measured a
+  real 9-question flask session + 1 overview call end to end via new additive instrumentation
+  (`UsageTotals`/`accumulate_usage`, `docs/PLAN.md` decision #29) — $3.61 total, 91 live API
+  calls, with 92% of cost concentrated in one bucket. Root-caused that bucket: 77.2% of its
+  tokens were billed at full price because the growing per-question tool-loop conversation is
+  never marked cacheable, only the static system/repo-map block is. Surveyed 7 current
+  cost-reduction techniques (dated, sourced pricing) via a general-purpose agent dispatch
+  (WebSearch/WebFetch — `explore` has no web access and no local Aider clone exists). Found a
+  high-confidence, ~1-line fix directly from the measured data plus a live SDK source check
+  (not assumed): a top-level `cache_control` parameter on `tool_runner()` that neither
+  `ask_onboarding_question` nor `generate_overview` currently passes. Retrospective: cost is now
+  visible for the first time — previously the weakest-instrumented of the four standing
+  dimensions, now has both a real number and a specific, ranked fix ready to build. No regression
+  risk introduced (purely additive instrumentation, confirmed via the full non-API test suite
+  staying green at 75 passed). Debt/risk: the recommended fix (lever 1b) is SDK-documented but
+  genuinely untested in this codebase — its actual effect size is an estimate pending
+  implementation, not yet a confirmed result.
 
 ## Proposed — awaiting approval
 
-- **Phase 3 — cost research spike** (`docs/PHASE3.md`): no cost/token instrumentation exists
-  anywhere in the codebase today, despite cost being one of the four standing dimensions above.
-  This phase measures a real onboarding+multi-question session's actual dollar/token cost by
-  stage, surveys current cost-reduction techniques with dated, sourced pricing, and produces a
-  ranked, sequenced plan in `docs/COST-RESEARCH.md` — research only, no pipeline changes beyond
-  the minimal additive instrumentation needed to measure it. In progress.
+- **Phase 4 — implement the top-ranked cost fix** (`docs/COST-RESEARCH.md`'s "Recommended
+  sequenced plan" item 1): add a top-level `cache_control={"type": "ephemeral"}` parameter to
+  both `tool_runner()` calls in `agent/loop.py` and `agent/overview.py`. Rationale: highest
+  impact (targets a measured 92%-of-cost bucket) at lowest effort/risk (one parameter per call
+  site, same caching mechanism this codebase already trusts elsewhere) of everything surveyed —
+  clearly beats the alternatives (model routing has already-observed evidence it can backfire;
+  an Aider-style repo-map is high-effort and unmeasured; semantic caching carries real
+  stale-citation risk). Exit criteria: re-run `docs/research/profile_cost.py` against the same
+  flask fixture before/after and show a material increase in `cache_read_input_tokens` share of
+  the "later calls" bucket and a corresponding drop in total $ cost. Guardrail: no more than a 2
+  percentage-point drop in citation groundedness/refusal accuracy vs. `docs/EVALS.md`'s current
+  per-repo baselines (arrow 100%/50%, click 99%/50%, flask 100%/50%, requests 95%/100%) — expected
+  to hold trivially since this changes billing, not model input content, but confirmed via
+  `onboard eval` rather than assumed. Excluded from this phase: the Batch API lever for eval runs
+  (item 2 of the recommended sequence) — sequenced second, after this higher-confidence fix lands
+  and is measured.
 
 ## Backlog / future ideas
 

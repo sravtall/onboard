@@ -129,3 +129,30 @@ Ask the human only for a secret you can't obtain or a genuine tradeoff decision 
 reasonable default (the cost/quality guardrail is the likely one — but set and record a
 sensible default rather than waiting). Otherwise choose, record in `COST-RESEARCH.md`, and
 continue.
+
+## Recommended build sequence
+
+Research complete — see `docs/COST-RESEARCH.md` for the full measured profile, technique
+catalog, and impact estimate. This section satisfies this file's own Step 4 instruction to
+record the evidence-based build order (no separate `PHASE3.md` build brief was authored; this
+research doc's findings feed directly into the next phase per `docs/ITERATION.md`'s loop).
+
+1. **Add top-level `cache_control` to both `tool_runner()` calls** (`agent/loop.py`'s
+   `ask_onboarding_question`, `agent/overview.py`'s `generate_overview`) — one parameter per
+   call site. This is the single highest-confidence, lowest-effort lever found: the measured
+   profile showed 77.2% of the dominant cost bucket's tokens (92% of total session cost) being
+   billed at full price because the growing per-question tool-loop conversation is never marked
+   cacheable, only the static system/repo-map blocks are. Validate by re-running
+   `docs/research/profile_cost.py` before/after and comparing `cache_read_input_tokens` share
+   and total $ cost, holding the fixture/questions constant. Guardrail: no more than a 2
+   percentage-point drop in citation groundedness/refusal accuracy vs. `docs/EVALS.md`'s current
+   baselines (expected to hold trivially, since this changes billing, not model input content).
+2. **Route `onboard eval`/`run_taxonomy_eval` through the Batch API** for a flat 50% discount on
+   bulk, non-interactive eval runs — the exact workload this project has already spent real
+   credits on twice. Medium effort (an async submission path in `evals/harness.py`); no quality
+   risk (same model/weights), pure latency tradeoff acceptable for non-interactive runs.
+3. **Not recommended yet:** model routing to cheaper models (already-observed evidence it can
+   backfire on broad tasks), an Aider-style ranked repo-map (plausible but high-effort/unmeasured
+   — revisit only if lever 1 underperforms), semantic answer caching (real stale-citation risk
+   specific to this project's grounding guarantee), and deferred tool loading (no benefit at the
+   current 3-tool scale).

@@ -96,6 +96,17 @@ class OverviewContent(BaseModel):
     where_to_start: str = Field(description="A concrete suggestion for a new engineer's first read")
 
 
+class UsageTotals(BaseModel):
+    """Accumulated Anthropic API usage across every Tool Runner iteration (one BetaMessage per
+    live API call) in a single ask_onboarding_question or generate_overview invocation."""
+
+    api_calls: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_creation_input_tokens: int = 0
+    cache_read_input_tokens: int = 0
+
+
 class GenerateOverviewOutput(BaseModel):
     architecture_summary: str
     key_modules: list[OverviewSection]
@@ -107,3 +118,4 @@ class GenerateOverviewOutput(BaseModel):
     verified: bool
     unverified_citations: list[str]
     retrieved_files: list[str] = []
+    usage: UsageTotals = Field(default_factory=UsageTotals)

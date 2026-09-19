@@ -23,6 +23,7 @@ from onboard_agent.tools.schemas import (
     ReadFileInput,
     ReadFileOutput,
     SearchCodebaseInput,
+    UsageTotals,
 )
 from onboard_agent.tools.search_codebase import search_codebase as _search_codebase_impl
 
@@ -41,6 +42,7 @@ class AnswerResult(BaseModel):
     verified: bool
     unverified_citations: list[str]
     retrieved_files: list[str] = []
+    usage: UsageTotals = UsageTotals()
 
 
 def build_tools(ctx: RepoContext, retrieved: list[RetrievedSpan]) -> list:
@@ -90,6 +92,22 @@ def build_tools(ctx: RepoContext, retrieved: list[RetrievedSpan]) -> list:
     return [search_codebase, read_file, list_structure]
 
 
+def accumulate_usage(messages: list) -> UsageTotals:
+    """Sums .usage across every message a Tool Runner loop yielded -- one BetaMessage per real
+    API call. Shared by ask_onboarding_question and agent/overview.py's generate_overview so
+    neither duplicates the summation."""
+    totals = UsageTotals()
+    for message in messages:
+        if message.usage is None:
+            continue
+        totals.api_calls += 1
+        totals.input_tokens += message.usage.input_tokens
+        totals.output_tokens += message.usage.output_tokens
+        totals.cache_creation_input_tokens += message.usage.cache_creation_input_tokens or 0
+        totals.cache_read_input_tokens += message.usage.cache_read_input_tokens or 0
+    return totals
+
+
 def ask_onboarding_question(question: str, ctx: RepoContext) -> AnswerResult:
     retrieved: list[RetrievedSpan] = []
     tools = build_tools(ctx, retrieved)
@@ -104,9 +122,9 @@ def ask_onboarding_question(question: str, ctx: RepoContext) -> AnswerResult:
         messages=[{"role": "user", "content": question}],
     )
 
-    final_message = None
-    for message in runner:
-        final_message = message
+    messages = list(runner)
+    final_message = messages[-1] if messages else None
+    usage = accumulate_usage(messages)
 
     answer_text = ""
     if final_message is not None:
@@ -120,4 +138,5 @@ def ask_onboarding_question(question: str, ctx: RepoContext) -> AnswerResult:
         verified=report.verified,
         unverified_citations=[c.as_str() for c in report.unverified_citations],
         retrieved_files=sorted({span.file_path for span in retrieved}),
+        usage=usage,
     )

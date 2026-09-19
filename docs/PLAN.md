@@ -60,6 +60,8 @@ duplicated retrieval/read logic between the two exposure surfaces.
 
 | 28 | `onboard eval` no longer overwrites `docs/EVALS.md` by default -- only with an explicit `--write-report` flag | Got bitten by this twice in this session: `write_markdown()` fully replaces the file with a bare table, silently destroying the hand-written failure-taxonomy analysis every time someone runs a sanity-check eval. Recovered via git both times, but a CLI shouldn't have a destructive side effect as its default behavior for what looks like a read-only "run and print" command |
 
+| 29 | `UsageTotals` (`tools/schemas.py`) + shared `accumulate_usage` (`agent/loop.py`) capture every `BetaMessage.usage` across a Tool Runner loop, attached to `AnswerResult`/`GenerateOverviewOutput` | Phase 3's cost research spike needed to measure real dollar cost per call, and the data was already free — every message a Tool Runner loop yields carries a required `.usage` field (input/output/cache tokens) that was being extracted for text/`parsed_output` only, then silently discarded. This is the spike's confirmed minimal, additive exception to "no production code changed" (all fields default-valued, confirmed backward-compatible with every existing caller/test) — the alternative (duplicating the tool-loop inside a throwaway script to capture usage independently) would have violated the project's own no-duplication architecture invariant. See `docs/COST-RESEARCH.md` for what the measured data revealed |
+
 ## Future work / v2 (explicitly out of scope for v1)
 
 - Writing or proposing code changes (v1 is read-only).

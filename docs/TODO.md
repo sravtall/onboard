@@ -115,7 +115,7 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] Live-verified in an actual browser: ingested the tiny fixture repo, asked a real question,
       confirmed the answer, "All 6 citations verified" banner, all 6 expandable code snippets, and
       "Retrieval provenance: 3 file(s) searched this session" panel all render correctly
-- [ ] Commit: `feat: thin web UI for demos`
+- [x] Commit: `feat: thin web UI for demos`
 
 ## Phase 4 — MCP dogfood + finalize
 - [x] Verified `uv run --directory <path>` flag spelling via `uv run --help`
@@ -128,4 +128,24 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
       (docs/PLAN.md decision #28)
 - [x] Fresh-clone-equivalent reproducibility confirmed: `uv sync`, full `pytest -q` (78 passed,
       including live-API tests), `onboard eval --retrieval-only` all green
-- [ ] Commit: `docs: finalize OnboardAgent Phase 2`
+- [x] Commit: `docs: finalize OnboardAgent Phase 2`
+
+# Phase 3 (docs/PHASE3.md) -- cost research spike
+
+- [x] Step 0: adopted docs/ITERATION.md as standing protocol -- CLAUDE.md pointer, docs/ROADMAP.md
+      seeded with north star + retrospectives for all prior phases
+- [x] Step 1: additive usage instrumentation -- `UsageTotals` (tools/schemas.py),
+      `accumulate_usage` (agent/loop.py), wired into both `AnswerResult` and
+      `GenerateOverviewOutput`; confirmed backward-compatible, full non-API test suite green (75
+      passed)
+- [x] Step 2: `docs/research/profile_cost.py` (committed) -- profiled a real 9-question flask
+      session + 1 overview call: $3.61 total, 91 live API calls, 92% of cost in one bucket
+- [x] Step 3: external technique survey via general-purpose agent (WebSearch/WebFetch, not
+      `explore` -- no web access/local Aider clone) -- 7 techniques catalogued with dated, sourced
+      pricing
+- [x] Step 4: impact estimate ranked against the measured profile -- found the #1 lever
+      (top-level `cache_control` on `tool_runner`) directly from the profile data plus a live SDK
+      source check, not assumed
+- [x] Step 5: docs/COST-RESEARCH.md written; docs/PHASE3.md's own "Recommended build sequence"
+      section appended; docs/PLAN.md decision #29
+- [ ] Commit: `research: cost-reduction plan grounded in real profile`

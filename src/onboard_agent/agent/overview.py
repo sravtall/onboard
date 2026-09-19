@@ -14,7 +14,7 @@ from __future__ import annotations
 import anthropic
 
 from onboard_agent.agent.grounding import RetrievedSpan, verify_answer
-from onboard_agent.agent.loop import MAX_ANSWER_TOKENS, build_tools
+from onboard_agent.agent.loop import MAX_ANSWER_TOKENS, accumulate_usage, build_tools
 from onboard_agent.agent.prompts import build_overview_system_blocks
 from onboard_agent.config import agent_model
 from onboard_agent.ingestion.pipeline import RepoContext
@@ -61,9 +61,9 @@ def generate_overview(ctx: RepoContext, focus: str | None = None) -> GenerateOve
         messages=[{"role": "user", "content": prompt}],
     )
 
-    final_message = None
-    for message in runner:
-        final_message = message
+    messages = list(runner)
+    final_message = messages[-1] if messages else None
+    usage = accumulate_usage(messages)
 
     content = final_message.parsed_output if final_message is not None else None
     if content is None:
@@ -88,4 +88,5 @@ def generate_overview(ctx: RepoContext, focus: str | None = None) -> GenerateOve
         verified=report.verified,
         unverified_citations=[c.as_str() for c in report.unverified_citations],
         retrieved_files=sorted({span.file_path for span in retrieved}),
+        usage=usage,
     )
