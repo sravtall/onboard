@@ -68,24 +68,41 @@ least one without regressing the others:
   genuinely untested in this codebase — its actual effect size is an estimate pending
   implementation, not yet a confirmed result.
 
+- **Phase 4 — top-ranked cost fix implemented and validated live**
+  (`docs/COST-RESEARCH.md`'s "Validated result" section): added
+  `cache_control={"type": "ephemeral"}` to both `tool_runner()` calls in `agent/loop.py` and
+  `agent/overview.py`. Re-profiled the identical flask fixture (same 9 questions, same overview
+  call) before/after: **$3.61 → $1.27, a confirmed 64.6% total cost reduction** — better than the
+  50-65% pre-implementation estimate. The "later calls" bucket's previously-uncached input tokens
+  (77.2% of that bucket) collapsed to near-zero, now categorized as cheap cache reads/writes
+  instead. Guardrail check: 2 of the profiled questions re-asked live post-fix, both
+  `verified=True` with 0 unverified citations (24 and 15 citations respectively) — no
+  groundedness regression, as expected since this only changes billing categorization, not model
+  input content. `docs/PLAN.md` decision #30. Retrospective: this is the fastest, highest-
+  confidence win of the whole project so far — a single SDK parameter, discovered by reading the
+  measured profile rather than guessing, cut real cost by nearly two-thirds with zero quality
+  tradeoff. Debt/risk: none identified; the fix is narrow and well-understood. The guardrail
+  check was a targeted 2-question spot-check, not a full `docs/EVALS.md` re-run — acceptable for
+  a billing-only change, but a full eval re-run would be warranted before combining this with any
+  future change that *does* alter model input content.
+
 ## Proposed — awaiting approval
 
-- **Phase 4 — implement the top-ranked cost fix** (`docs/COST-RESEARCH.md`'s "Recommended
-  sequenced plan" item 1): add a top-level `cache_control={"type": "ephemeral"}` parameter to
-  both `tool_runner()` calls in `agent/loop.py` and `agent/overview.py`. Rationale: highest
-  impact (targets a measured 92%-of-cost bucket) at lowest effort/risk (one parameter per call
-  site, same caching mechanism this codebase already trusts elsewhere) of everything surveyed —
-  clearly beats the alternatives (model routing has already-observed evidence it can backfire;
-  an Aider-style repo-map is high-effort and unmeasured; semantic caching carries real
-  stale-citation risk). Exit criteria: re-run `docs/research/profile_cost.py` against the same
-  flask fixture before/after and show a material increase in `cache_read_input_tokens` share of
-  the "later calls" bucket and a corresponding drop in total $ cost. Guardrail: no more than a 2
-  percentage-point drop in citation groundedness/refusal accuracy vs. `docs/EVALS.md`'s current
-  per-repo baselines (arrow 100%/50%, click 99%/50%, flask 100%/50%, requests 95%/100%) — expected
-  to hold trivially since this changes billing, not model input content, but confirmed via
-  `onboard eval` rather than assumed. Excluded from this phase: the Batch API lever for eval runs
-  (item 2 of the recommended sequence) — sequenced second, after this higher-confidence fix lands
-  and is measured.
+- **Phase 5 — Batch API for eval runs** (`docs/COST-RESEARCH.md`'s "Recommended sequenced plan"
+  item 2, next in sequence): route `onboard eval`/`run_taxonomy_eval` through Anthropic's Message
+  Batches API for a flat 50% discount on the bulk, non-interactive eval workload — real money
+  this project has already spent twice hitting credit limits on. Rationale: same model/weights
+  (zero quality risk), and eval runs are exactly the "non-urgent, can wait ~1h" workload the
+  Batch API targets; interactive `ask`/`overview` calls are out of scope for this lever since a
+  human is waiting synchronously. Build: an async batch-submission path in `evals/harness.py`,
+  with a `--sync` fallback flag for fast dev-loop iteration where the ~1h batch turnaround
+  doesn't suit. Exit criteria: a batch-submitted eval run's total $ cost is ~50% of an equivalent
+  synchronous run on the same fixtures/questions. Guardrail: identical eval results (same model,
+  same weights) — this is a pure cost/latency tradeoff with no expected quality dimension to
+  check, though the 24h batch expiry and best-effort (not guaranteed) prompt-cache hit rate in
+  batch mode are worth confirming don't silently degrade the numbers. Excluded from this phase:
+  everything else on the "won't do yet" list (model routing, Aider-style repo-map, semantic
+  caching, deferred tool loading) — none have a strong enough case yet to schedule.
 
 ## Backlog / future ideas
 

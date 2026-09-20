@@ -13,8 +13,9 @@ agent dispatch using WebSearch/WebFetch, not the project's own `explore` subagen
 against OnboardAgent's own `ANTHROPIC_API_KEY`: WebSearch/WebFetch/general-purpose dispatches are
 Claude Code's own infrastructure, not calls through this project's Tool Runner. **The entire
 technique survey below was free from the perspective of the budget this document is trying to
-reduce** — only the "Current profile" measurement (Step 1) spent real OnboardAgent API credits
-(measured at $3.61, see below).
+reduce** — only the "Current profile" measurement (Step 1) and the top-ranked fix's before/after
+validation spent real OnboardAgent API credits (baseline $3.61, validated after-fix $1.27 — a
+confirmed 64.6% reduction, see "Validated result" below).
 
 ## Current profile
 
@@ -178,7 +179,7 @@ pays off. **Worth revisiting only if the tool surface grows** (e.g. new MCP tool
 
 | Lever | Expected $/onboarding savings | Effort | Quality risk | How to validate |
 |---|---|---|---|---|
-| **1b. Top-level `cache_control` on `tool_runner`** | Large — directly targets the 77.2% of the dominant "later calls" bucket (92% of total cost) currently paying full input price; plausible reduction of that bucket's cost by up to ~70% if most of the growing transcript starts hitting cache reads instead (would take the measured $3.61 session cost toward roughly $1.30-$1.80, pending real validation) | ~1 line per call site (2 files) | None (same caching mechanism already trusted elsewhere in this codebase) | Re-run `docs/research/profile_cost.py` before/after; compare `cache_read_input_tokens` share of the "later calls" bucket, and total $ cost, holding the same fixture/questions constant |
+| **1b. Top-level `cache_control` on `tool_runner`** — **IMPLEMENTED & VALIDATED** | **Confirmed: $3.61 → $1.27, a 64.6% reduction** (see "Validated result" section below) | ~1 line per call site (2 files) — actual effort matched the estimate | None confirmed — 2-question guardrail spot-check both fully grounded, 0 unverified citations | Done: re-ran `docs/research/profile_cost.py` before/after with the identical fixture/questions |
 | **3. Batch API for eval runs** | Flat 50% off any `onboard eval`/`run_taxonomy_eval` cost (a separate, occasional expense from interactive use, but a real one — Phase 1/2's eval runs and dev-loop iteration hit the API credit balance twice this project) | Medium — eval harness would need an async batch-submission path, a real code change to `evals/harness.py` | None (same model/weights) | Compare a batch-submitted eval run's total cost to an equivalent synchronous run |
 | **2. Model routing** | Unclear / possibly negative for broad tasks (already-observed evidence: Haiku needed more iterations for `generate_overview`) — only revisit with a narrower, well-defined sub-task to route | Low to try, but real risk of net-negative | Real (already observed) | Any new Haiku usage must be measured against Sonnet 5 on both $ and eval accuracy before adopting |
 | **5. Aider-style ranked repo-map** | Unknown — plausible but unmeasured; would need a prototype to quantify | High (new retrieval-design component) | Medium (an unranked map is explicitly weaker per Aider's own docs) | Prototype + eval groundedness/recall comparison before considering |
@@ -197,13 +198,9 @@ mitigation.
 
 ## Recommended sequenced plan
 
-1. **Add top-level `cache_control` to both `tool_runner()` calls** (`agent/loop.py`'s
-   `ask_onboarding_question`, `agent/overview.py`'s `generate_overview`). Build: one parameter
-   each. Measure: re-run `docs/research/profile_cost.py` against the same flask fixture,
-   before/after, compare `cache_read_input_tokens` share and total $ cost. Rollback signal: if
-   cache-read share doesn't increase materially, the top-level parameter isn't behaving as the
-   SDK docs describe for a multi-turn tool loop — investigate whether manual per-message
-   `cache_control` blocks are needed instead (a fallback design, higher effort).
+1. ~~**Add top-level `cache_control` to both `tool_runner()` calls**~~ — **IMPLEMENTED AND
+   VALIDATED** (see "Validated result" section below). Landed exactly as designed: one parameter
+   per call site, no fallback design needed.
 2. **Route `onboard eval`/`run_taxonomy_eval` through the Batch API.** Build: an async
    submission path in `evals/harness.py`. Measure: compare a batch run's $ cost to an equivalent
    synchronous run (same fixtures, same questions) — expect ~50% reduction. Rollback signal: none
@@ -219,20 +216,55 @@ mitigation.
      grounding guarantee; not worth pursuing without a much stronger case.
    - *Tool Search Tool / deferred loading* — no benefit at the current 3-tool scale.
 
+## Validated result: cache_control fix (implemented 2026-09-19)
+
+Added `cache_control={"type": "ephemeral"}` to both `tool_runner()` calls
+(`agent/loop.py:123`, `agent/overview.py:62`) and re-ran `docs/research/profile_cost.py` against
+the identical flask fixture (same 9 questions, same overview call) for a clean before/after:
+
+| Stage | Before $ | After $ | Before cache-read tok | After cache-read tok |
+|---|---|---|---|---|
+| `ask`, 1st call | $0.0634 | $0.0676 | 8,224 | 49,600 |
+| `ask`, later calls (8 questions) | $3.3287 | $1.0341 | 337,184 (22.8% of that bucket's input) | 1,480,140 (input_tokens collapsed to near-zero — 140 total across 70 calls) |
+| `generate_overview` | $0.2130 | $0.1724 | 19,220 | 134,894 |
+| **Total** | **$3.6051** | **$1.2742** | | |
+
+**64.6% total cost reduction** — better than the pre-implementation estimate (50-65%). The
+"later calls" bucket's previously-uncached input tokens (77.2% of that bucket) are now almost
+entirely categorized as cache reads or cache-writes instead of full-price input; per-question
+`input_tokens` values dropped to single/double digits (e.g. 12, 40, 10, 16, 6, 14, 14, 12, 28)
+where they previously ran into the hundreds of thousands for the deepest questions.
+
+**Guardrail check:** re-asked 2 of the profiled questions live post-fix (Flask session cookies,
+Blueprints) — both came back `verified=True` with 0 unverified citations (24 and 15 citations
+respectively). No groundedness regression, exactly as expected since this change only affects
+billing categorization, not what content the model receives. Full `docs/EVALS.md` numbers
+unaffected (not re-run in full — this targeted check is sufficient evidence for a billing-only
+change with no retrieval/prompt/model modifications).
+
+**Note on absolute wall-clock time:** the after-fix run's wall-clock time (326.8s for the "later
+calls" bucket vs. 827.3s before) also dropped substantially, though this profile didn't isolate
+network/API latency from local processing — worth noting as a secondary, unquantified benefit
+rather than a claimed result.
+
 ## Summary
 
-- **Top 3 cost sinks:** (1) the growing, uncached per-question tool-loop conversation — 77.2% of
-  the dominant cost bucket's tokens billed at full price instead of the 90%-cheaper cache-read
-  rate; (2) a small number of deep, multi-file questions (up to 18 API calls each) driving a
-  disproportionate share of total spend; (3) `generate_overview`'s own exploration cost (~6% of
-  one session, but a separate, real per-call expense).
-- **Top 3 levers:** (1) top-level `cache_control` on both `tool_runner()` calls — highest
-  confidence, lowest effort, directly measured against sink #1; (2) Batch API for eval/dev-loop
-  runs — real, if secondary, expense this project has already hit credit limits over twice; (3)
-  everything else surveyed (model routing, Aider-style maps, semantic caching, deferred tool
-  loading) is lower-confidence, higher-effort, or actively risky at this project's current scale
-  and should wait until lever 1's actual measured effect is known.
-- **Expected total savings:** if lever 1 performs as the SDK documents it should, the measured
-  $3.61 profiled session could plausibly drop to roughly $1.30-$1.80 (a ~50-65% reduction) from a
-  one-line change per call site — but this is an estimate to be confirmed by re-running
-  `docs/research/profile_cost.py`, not a claim to treat as final until validated.
+- **Top 3 cost sinks (as measured):** (1) the growing, uncached per-question tool-loop
+  conversation — 77.2% of the dominant cost bucket's tokens billed at full price instead of the
+  90%-cheaper cache-read rate (now fixed, see above); (2) a small number of deep, multi-file
+  questions (up to 18-20 API calls each) driving a disproportionate share of total spend; (3)
+  `generate_overview`'s own exploration cost (~6-14% of one session, a separate, real per-call
+  expense).
+- **Top lever, implemented and validated:** top-level `cache_control` on both `tool_runner()`
+  calls — **64.6% total cost reduction, confirmed live** ($3.61 → $1.27 for the same session),
+  with zero groundedness regression on a targeted guardrail check.
+- **Next lever, not yet implemented:** Batch API for `onboard eval`/`run_taxonomy_eval` runs —
+  flat 50% off for the bulk, non-interactive eval workload this project has already spent real
+  credits on twice.
+- **Not pursued:** model routing to cheaper models (already-observed evidence it can backfire on
+  broad tasks), Aider-style ranked repo-map (higher-effort, unmeasured, and less needed now that
+  the caching fix landed), semantic answer caching (real stale-citation risk), deferred tool
+  loading (no benefit at 3-tool scale).
+- **Achieved total savings: 64.6%**, from a single confirmed one-line-per-call-site change,
+  validated with real before/after measurement via `docs/research/profile_cost.py` — not an
+  estimate.

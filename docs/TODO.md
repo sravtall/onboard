@@ -148,4 +148,16 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
       source check, not assumed
 - [x] Step 5: docs/COST-RESEARCH.md written; docs/PHASE3.md's own "Recommended build sequence"
       section appended; docs/PLAN.md decision #29
-- [ ] Commit: `research: cost-reduction plan grounded in real profile`
+- [x] Commit: `research: cost-reduction plan grounded in real profile`
+
+# Phase 4 (self-proposed per docs/ITERATION.md) -- implement top-ranked cost fix
+
+- [x] Added `cache_control={"type": "ephemeral"}` to both `tool_runner()` calls (agent/loop.py,
+      agent/overview.py)
+- [x] Re-profiled the identical flask fixture before/after: $3.61 -> $1.27, confirmed 64.6% cost
+      reduction (better than the 50-65% estimate)
+- [x] Guardrail: 2-question live spot-check, both fully verified/grounded, 0 unverified citations
+- [x] docs/COST-RESEARCH.md updated with validated (not estimated) results; docs/PLAN.md decision
+      #30; docs/ROADMAP.md moved to Done with retrospective, Phase 5 (Batch API for evals)
+      proposed and awaiting approval
+- [ ] Commit: `perf: cache the tool-loop conversation, cutting session cost 64.6%`

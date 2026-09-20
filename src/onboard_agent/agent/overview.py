@@ -59,6 +59,7 @@ def generate_overview(ctx: RepoContext, focus: str | None = None) -> GenerateOve
         output_format=OverviewContent,
         system=build_overview_system_blocks(ctx.repo_map),
         messages=[{"role": "user", "content": prompt}],
+        cache_control={"type": "ephemeral"},
     )
 
     messages = list(runner)

@@ -120,6 +120,7 @@ def ask_onboarding_question(question: str, ctx: RepoContext) -> AnswerResult:
         tools=tools,
         system=build_system_blocks(ctx.repo_map),
         messages=[{"role": "user", "content": question}],
+        cache_control={"type": "ephemeral"},
     )
 
     messages = list(runner)
