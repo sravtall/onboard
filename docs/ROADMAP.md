@@ -86,23 +86,26 @@ least one without regressing the others:
   a billing-only change, but a full eval re-run would be warranted before combining this with any
   future change that *does* alter model input content.
 
+## Rejected (investigated, not building)
+
+- **Batch API for eval runs** — proposed as Phase 5, rejected before any code was written once
+  checked against the SDK. Anthropic's Message Batches API (`batches.create()`) submits a batch
+  of *independent, single-shot* `messages.create`-style requests — it has no concept of a
+  multi-turn tool-use loop. But `ask_onboarding_question`/`generate_overview` are Tool Runner
+  loops where each round trip depends on the previous round's tool results — you can't pre-batch
+  "round 3" before "round 2" has run. The only way to apply Batch API here would be a hybrid
+  scheme (batch-submit round 1 for all N questions, wait, execute tools locally, batch-submit
+  round 2 for whichever questions need another round, ...), but each round can take up to ~1h
+  (worst case 24h), and a single question can need up to 20 rounds — turning a 15-20 minute eval
+  run into potentially many hours for a 50% saving smaller than what lever 1 already delivered
+  with zero latency cost. Not worth it. Left in the backlog below only as "don't revisit unless
+  the agent-loop architecture changes to something more batchable."
+
 ## Proposed — awaiting approval
 
-- **Phase 5 — Batch API for eval runs** (`docs/COST-RESEARCH.md`'s "Recommended sequenced plan"
-  item 2, next in sequence): route `onboard eval`/`run_taxonomy_eval` through Anthropic's Message
-  Batches API for a flat 50% discount on the bulk, non-interactive eval workload — real money
-  this project has already spent twice hitting credit limits on. Rationale: same model/weights
-  (zero quality risk), and eval runs are exactly the "non-urgent, can wait ~1h" workload the
-  Batch API targets; interactive `ask`/`overview` calls are out of scope for this lever since a
-  human is waiting synchronously. Build: an async batch-submission path in `evals/harness.py`,
-  with a `--sync` fallback flag for fast dev-loop iteration where the ~1h batch turnaround
-  doesn't suit. Exit criteria: a batch-submitted eval run's total $ cost is ~50% of an equivalent
-  synchronous run on the same fixtures/questions. Guardrail: identical eval results (same model,
-  same weights) — this is a pure cost/latency tradeoff with no expected quality dimension to
-  check, though the 24h batch expiry and best-effort (not guaranteed) prompt-cache hit rate in
-  batch mode are worth confirming don't silently degrade the numbers. Excluded from this phase:
-  everything else on the "won't do yet" list (model routing, Aider-style repo-map, semantic
-  caching, deferred tool loading) — none have a strong enough case yet to schedule.
+(none currently — see "Backlog" below for candidates; next phase to be drafted targeting
+accuracy, the dimension with the most concrete, already-measured weaknesses per the user's
+2026-10-06 direction to move off cost now that it has a confirmed win.)
 
 ## Backlog / future ideas
 
