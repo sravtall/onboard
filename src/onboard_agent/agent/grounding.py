@@ -49,6 +49,29 @@ def extract_citations(text: str) -> list[Citation]:
     return list(seen.values())
 
 
+def _canonicalize_citations(
+    citations: list[Citation], retrieved: list[RetrievedSpan]
+) -> list[Citation]:
+    """Resolve a citation's path to the exact path it was retrieved under, when the model
+    abbreviated a full relative path to just the filename (e.g. `termui.py` instead of
+    `src/click/termui.py`, observed live -- docs/PLAN.md decision #31). Only resolves when the
+    bare filename uniquely identifies one retrieved file; an ambiguous abbreviation (two
+    retrieved files sharing a name, e.g. two `__init__.py`s) is left unresolved rather than
+    silently matched to the wrong one, so it still correctly fails verification. Re-deduplicates
+    afterward since two differently-written citations can canonicalize to the same span."""
+    retrieved_paths = {s.file_path for s in retrieved}
+    seen: dict[tuple[str, int, int], Citation] = {}
+    for c in citations:
+        resolved = c
+        if c.file_path not in retrieved_paths:
+            basename = c.file_path.rsplit("/", 1)[-1]
+            matches = {p for p in retrieved_paths if p.rsplit("/", 1)[-1] == basename}
+            if len(matches) == 1:
+                resolved = Citation(next(iter(matches)), c.start_line, c.end_line)
+        seen[(resolved.file_path, resolved.start_line, resolved.end_line)] = resolved
+    return list(seen.values())
+
+
 def _exists_on_disk(citation: Citation, repo_root: Path) -> bool:
     try:
         target = resolve_within_repo(repo_root, citation.file_path)
@@ -96,7 +119,7 @@ def _was_retrieved(citation: Citation, retrieved: list[RetrievedSpan]) -> bool:
 def verify_answer(
     answer_text: str, repo_root: Path, retrieved: list[RetrievedSpan]
 ) -> GroundingReport:
-    citations = extract_citations(answer_text)
+    citations = _canonicalize_citations(extract_citations(answer_text), retrieved)
     unverified = [
         c for c in citations if not (_exists_on_disk(c, repo_root) and _was_retrieved(c, retrieved))
     ]

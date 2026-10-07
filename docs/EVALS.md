@@ -90,6 +90,30 @@ Raising the cap to 20 and re-running confirmed the fix directly: that same flask
 
 - **Refusal accuracy dropped on 2 of 4 repos when the iteration cap was raised** (click and flask both went 100% → 50% on their 2 unanswerable questions between the fixes-1-4 run and the final run). With only 2 unanswerable questions per repo this could be ordinary live-model call-to-call variance (already documented as expected in the v1 notes above) — but both repos moved in the *same* direction in the same run, which is at least suggestive of a real mechanism: a larger iteration budget may let the model "try harder" on a genuinely unanswerable question instead of concluding early that nothing relevant exists, eventually producing a plausible-sounding but ungrounded citation instead of an honest refusal. Flagged as a hypothesis for v2, not a proven regression — n=2 per repo is too thin to be conclusive from a single run.
 - **flask's Retrieval Recall@K (67%) has two remaining, distinct root causes**, neither fixed by the rerank changes above: (1) the context-stack and app-config questions keep surfacing `app.py`/`sansio/app.py` instead of the more specific `ctx.py`/`globals.py`/`config.py` — likely the same "one broad, frequently-relevant file wins regardless of sub-topic" pattern as the arrow regression, but harder to fix generically since `app.py` genuinely is relevant to many flask questions (unlike arrow's self-named-module case); (2) `tests/conftest.py` itself still doesn't outrank other flask test files for the test-setup question, even though the categorical test-file penalty correctly exempts it. Both are now correctly answered anyway in practice by the live agent using `list_structure`/`read_file` directly — see fix 4 — so this is a metric-methodology gap (Recall@K only checks `search_codebase`) more than a live-answer quality gap.
-- **A citation-format bug**: click's and requests' `hallucinated` cases are not fabricated content — inspecting the raw citations shows the model sometimes emits a bare filename (`termui.py:121-127`) instead of the full relative path (`src/click/termui.py:121-127`) when a file was read earlier in the same tool-call sequence, which `agent/grounding.py`'s exact-path containment check correctly fails to match against the retrieved span. This under-counts real hallucinations by conflating them with a citation-formatting inconsistency. Worth a v2 fix (either normalize citations to basename-tolerant matching in `grounding.py`, or tighten the system prompt to always cite the full path `read_file`/`search_codebase` returned) rather than a Phase 2 scope item.
+- ~~**A citation-format bug**: click's and requests' `hallucinated` cases are not fabricated content — inspecting the raw citations shows the model sometimes emits a bare filename (`termui.py:121-127`) instead of the full relative path (`src/click/termui.py:121-127`) when a file was read earlier in the same tool-call sequence, which `agent/grounding.py`'s exact-path containment check correctly fails to match against the retrieved span.~~ **Fixed in Phase 3 — see below.**
 
 **Exit criteria met**: before/after improvement demonstrated on multiple failure modes (`incorrectly_refused`, `retrieval_miss` via Recall@K) across all 4 real repos, with root causes verified via direct instrumentation rather than assumed.
+
+## Phase 3 follow-up: citation-format bug fixed
+
+Per `docs/ITERATION.md`'s self-iteration loop, after Phase 3's cost research spike shipped a
+confirmed 64.6% cost reduction, the next phase targeted accuracy — specifically this exact
+citation-format bug, the most concretely diagnosed accuracy weak spot on record.
+
+**Fix** (`docs/PLAN.md` decision #31): `agent/grounding.py` gained `_canonicalize_citations`,
+which resolves a bare-filename citation to the full path it was actually retrieved under, but
+only when that basename uniquely identifies one retrieved file — an ambiguous abbreviation (two
+retrieved files sharing a name) is deliberately left unresolved so it still correctly fails
+verification. The citation's *stored* path is corrected too, not just its verification label, so
+a UI/CLI citation expander calling `read_file` on it still resolves correctly.
+
+**Validated live** by re-running the taxonomy eval against the two affected repos:
+
+| Repo | Before (documented above) | After |
+|---|---|---|
+| pallets/click | `hallucinated`: 1/10 | **0/10 — all 12 questions `correct`** |
+| psf/requests | `hallucinated`: 2/9 | **0/9 — all 11 questions `correct`** |
+
+Both repos now show zero failures of any kind on their full question sets. 3 new unit tests
+(`tests/unit/test_grounding.py`) cover the resolved case, the deliberately-unresolved ambiguous
+case, and confirm full-path citations are unaffected.

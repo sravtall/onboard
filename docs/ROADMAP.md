@@ -101,11 +101,28 @@ least one without regressing the others:
   with zero latency cost. Not worth it. Left in the backlog below only as "don't revisit unless
   the agent-loop architecture changes to something more batchable."
 
+- **Phase 6 — citation-format bug fixed and validated live** (`docs/EVALS.md`'s "Phase 3
+  follow-up" section): per the user's 2026-10-06 direction to move off cost (now with a confirmed
+  win) onto accuracy, and their choice among 3 evidence-anchored options, fixed the most
+  concretely-diagnosed accuracy weak spot on record. `agent/grounding.py` gained
+  `_canonicalize_citations`: a bare-filename citation (e.g. `termui.py:12-20`) now resolves to
+  the full retrieved path when the basename is unambiguous, correcting both the verification
+  label and the citation's stored path (so a UI/CLI citation expander still resolves it). Left
+  genuinely ambiguous abbreviations (two same-named retrieved files) unresolved on purpose — the
+  fix narrows false positives without weakening the grounding guarantee. Validated live by
+  re-running the taxonomy eval against the two affected repos: click 1/10 → **0/10 hallucinated**
+  (all 12 questions now `correct`), requests 2/9 → **0/9 hallucinated** (all 11 now `correct`) —
+  both repos went to zero failures of any kind. 3 new unit tests. `docs/PLAN.md` decision #31.
+  Retrospective: second evidence-based, low-risk, high-confidence win in a row — both this and
+  the cache_control fix were found by reading measured data (not guessing) and validated with
+  real before/after numbers rather than assumed. No regressions: full non-API test suite stayed
+  green (78 passed) throughout. Debt/risk: none identified; the two other accuracy candidates
+  considered (refusal-accuracy sample size, flask's retrieval pattern) remain in the backlog,
+  untouched.
+
 ## Proposed — awaiting approval
 
-(none currently — see "Backlog" below for candidates; next phase to be drafted targeting
-accuracy, the dimension with the most concrete, already-measured weaknesses per the user's
-2026-10-06 direction to move off cost now that it has a confirmed win.)
+(none currently — see "Backlog" below for candidates.)
 
 ## Backlog / future ideas
 
@@ -113,9 +130,6 @@ Carried forward from `docs/README.md`'s "Limitations & v2 next-steps" (not yet s
 
 - Retrieval-recall metric blind spot for config/tooling questions (only checks `search_codebase`,
   which never indexes non-`.py` files) — score the live answer's citations directly instead.
-- Citation-format bug: bare-filename citations (e.g. `termui.py:12-20` instead of the full
-  relative path) get mislabeled as hallucinated even when grounded — basename-tolerant matching
-  or a stricter prompt instruction.
 - Possible refusal-accuracy trade-off from the larger tool-iteration budget — needs a bigger
   sample of unanswerable questions before concluding it's a real effect.
 - flask's "one broad, frequently-relevant file wins regardless of sub-topic" retrieval pattern

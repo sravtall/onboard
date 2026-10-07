@@ -183,14 +183,16 @@ citation in an answer against code actually retrieved that session before return
 See [`docs/EVALS.md`](docs/EVALS.md) for the full before/after tables, a labeled failure taxonomy
 (`correct` / `retrieval_miss` / `hallucinated` / `should_refuse_but_didnt` / `incorrectly_refused`),
 and honest notes on remaining weak spots and live-model non-determinism. Summary after Phase 2's
-real-repo error analysis and fixes, across 4 repos of varying shape:
+real-repo error analysis and fixes plus a Phase 3 follow-up (a citation-format bug fix that took
+click and requests to 100% groundedness — see `docs/EVALS.md`'s "Phase 3 follow-up" section),
+across 4 repos of varying shape:
 
 | Repo | Retrieval Recall@K | Citation Groundedness | Refusal Accuracy |
 |---|---|---|---|
 | arrow-py/arrow | 100% | 100% | 50% |
-| pallets/click | 80% | 99% | 50% |
+| pallets/click | 80% | 100% | 50% |
 | pallets/flask | 67% | 100% | 50% |
-| psf/requests | 89% | 95% | 100% |
+| psf/requests | 89% | 100% | 100% |
 
 Citation groundedness measures *every citation the agent ever produced* against code it actually
 retrieved that session — it is not a proxy metric, it's the safety property the whole project
@@ -241,11 +243,6 @@ detail and root-cause analysis behind each one):
   CI YAML) — the agent correctly answers these via `list_structure`+`read_file` instead, but the
   metric can't see that path. A v2 harness should score the live answer's citations directly for
   these questions, not just `search_codebase`'s output.
-- **A citation-format bug undercounts nothing but also over-labels a few cases as "hallucinated."**
-  The model occasionally cites a bare filename (`termui.py:12-20`) instead of the full relative
-  path when a file was read earlier in the same tool sequence; `agent/grounding.py`'s exact-path
-  match then fails a citation that was actually grounded. Worth a basename-tolerant matching mode
-  or a stricter prompt instruction.
 - **Refusal accuracy may trade off against thoroughness.** Raising the tool-call iteration budget
   (needed to stop truncating legitimate multi-file answers) coincided with lower refusal accuracy
   on 2 of 4 repos in one run — plausibly because a larger budget lets the model "try harder" on a

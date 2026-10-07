@@ -63,3 +63,44 @@ def test_answer_with_no_citations_is_trivially_verified():
     report = verify_answer("I couldn't find anything about this in the repo.", FIXTURE_REPO, [])
     assert report.verified
     assert report.citations == []
+
+
+def test_bare_filename_citation_resolves_to_unique_retrieved_path(tmp_path):
+    """Observed live: the model sometimes cites a bare filename (`module.py:1-2`) instead of the
+    full relative path it was actually retrieved under (`sub/module.py:1-2`) -- this should still
+    verify, and the stored citation should show the real, resolvable path, not the bare one."""
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    (nested / "module.py").write_text("def f():\n    pass\n", encoding="utf-8")
+    retrieved = [RetrievedSpan("sub/module.py", 1, 2)]
+
+    report = verify_answer("See module.py:1-2.", tmp_path, retrieved)
+
+    assert report.verified
+    assert report.citations[0].file_path == "sub/module.py"
+
+
+def test_ambiguous_bare_filename_citation_is_not_resolved(tmp_path):
+    """Two retrieved files sharing a basename (e.g. two __init__.py's) must not be silently
+    matched to the wrong one -- an ambiguous abbreviation correctly fails verification."""
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    (tmp_path / "a" / "module.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "b" / "module.py").write_text("y = 2\n", encoding="utf-8")
+    retrieved = [RetrievedSpan("a/module.py", 1, 1), RetrievedSpan("b/module.py", 1, 1)]
+
+    report = verify_answer("See module.py:1-1.", tmp_path, retrieved)
+
+    assert not report.verified
+
+
+def test_full_path_citation_is_unaffected_by_canonicalization(tmp_path):
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    (nested / "module.py").write_text("def f():\n    pass\n", encoding="utf-8")
+    retrieved = [RetrievedSpan("sub/module.py", 1, 2)]
+
+    report = verify_answer("See sub/module.py:1-2.", tmp_path, retrieved)
+
+    assert report.verified
+    assert report.citations[0].file_path == "sub/module.py"

@@ -160,4 +160,24 @@ Phases per `kickoff.md` / `PLAN.md`. Check off as exit criteria pass.
 - [x] docs/COST-RESEARCH.md updated with validated (not estimated) results; docs/PLAN.md decision
       #30; docs/ROADMAP.md moved to Done with retrospective, Phase 5 (Batch API for evals)
       proposed and awaiting approval
-- [ ] Commit: `perf: cache the tool-loop conversation, cutting session cost 64.6%`
+- [x] Commit: `perf: cache the tool-loop conversation, cutting session cost 64.6%`
+
+# Phase 5 (self-proposed, investigated, rejected) -- Batch API for evals
+
+- [x] Checked `batches.create()` against the SDK before writing code: independent single-shot
+      requests only, no multi-turn tool-use loop support -- fundamentally incompatible with
+      Tool Runner's sequential round-trip pattern without a hybrid per-round scheme that would
+      turn a 15-20 min eval run into potentially many hours
+- [x] Rejected, not built. docs/ROADMAP.md records the investigation and reasoning
+
+# Phase 6 (self-proposed per docs/ITERATION.md, user chose this target) -- citation-format fix
+
+- [x] `agent/grounding.py`: new `_canonicalize_citations` resolves a bare-filename citation to
+      its full retrieved path when the basename is unambiguous; ambiguous cases deliberately
+      left unresolved
+- [x] 3 new unit tests (tests/unit/test_grounding.py), full non-API suite green (78 passed)
+- [x] Validated live: click 1/10 -> 0/10 hallucinated (12/12 correct), requests 2/9 -> 0/9
+      hallucinated (11/11 correct) -- both repos now zero failures of any kind
+- [x] docs/EVALS.md "Phase 3 follow-up" section; docs/PLAN.md decision #31; README eval table
+      and Limitations section updated; docs/ROADMAP.md moved to Done with retrospective
+- [ ] Commit: `fix: resolve bare-filename citations to their full retrieved path`
